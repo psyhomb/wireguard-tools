@@ -35,3 +35,15 @@ Options:
   -c|--client-config client_name client_wg_ip [server_name] [server_port] [server_public_ip]
   -q|--gen-qr-code config_name
 ```
+
+Generate server keys and config
+
+```bash
+./wgcg.sh -s
+```
+
+Generate client keys, client config and update server config (add a new Peer)
+
+```bash
+./wgcg.sh -c foo 10.0.0.2
+```
