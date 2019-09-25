@@ -44,7 +44,7 @@ help() {
   echo "Options:"
   echo "  -s|--server-config [server_name] [server_wg_ip] [server_port]"
   echo "  -c|--client-config client_name client_wg_ip [server_name] [server_port] [server_public_ip]"
-  echo "  -q|--gen-qr-code config_name"
+  echo "  -q|--gen-qr-code client_name"
 }
 
 
