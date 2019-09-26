@@ -83,6 +83,7 @@ PostDown = /usr/local/bin/wgfw.sh del
 EOF
 
   touch ${WORKING_DIR}/.server-${server_name}.generated
+  echo "Server config ${WORKING_DIR}/server-${server_name}.conf has been generated successfully!"
 }
 
 
@@ -145,6 +146,8 @@ AllowedIPs = ${client_wg_ip}/32
 PersistentKeepalive = 25
 ### ${client_name} - END
 EOF
+
+  echo "Client config ${WORKING_DIR}/client-${client_name}.conf has been generated successfully!"
 }
 
 
@@ -159,6 +162,7 @@ gen_qr() {
   fi
 
   cat ${config_path} | qrencode -o ${config_path}.png && chmod 600 ${config_path}.png
+  echo "QR file ${config_path}.png has been generated successfully!"
 }
 
 
