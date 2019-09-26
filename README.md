@@ -15,15 +15,10 @@ This script is created to ease manual process of Wireguard configuration and wil
 Before start using it I would suggest updating default options, otherwise you will have to specify these options from the command line every time you're running the script.
 
 ```bash
-# Specify any server name you like
-SERVER_NAME="wg0"
-# VPN (WG) IP private address
-SERVER_WG_IP="10.0.0.1"
-# Static server port
-SERVER_PORT="52001"
-# Server's public IP or FQDN
-# To discover server's public IP use: curl -sSL https://ifconfig.co
-SERVER_PUBLIC_IP="wg.example.com"
+export SERVER_NAME="wg0"                   # Specify any server name you like
+export SERVER_WG_IP="10.0.0.1"             # VPN (WG) IP private address
+export SERVER_PORT="52001"                 # Static server port
+export SERVER_PUBLIC_IP="wg0.example.com"  # Server's public IP or FQDN
 ```
 
 ```bash

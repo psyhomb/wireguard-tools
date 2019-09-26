@@ -6,14 +6,14 @@
 ### Global variables
 # Default options
 # Specify any server name you like
-SERVER_NAME="wg0"
+SERVER_NAME=${SERVER_NAME:-"wg0"}
 # VPN (WG) IP private address
-SERVER_WG_IP="10.0.0.1"
+SERVER_WG_IP=${SERVER_WG_IP:-"10.0.0.1"}
 # Static server port
-SERVER_PORT="52001"
+SERVER_PORT=${SERVER_PORT:-"52001"}
 # Server's public IP or FQDN
 # To discover server's public IP use: curl -sSL https://ifconfig.co
-SERVER_PUBLIC_IP="wg.example.com"
+SERVER_PUBLIC_IP=${SERVER_PUBLIC_IP:-"wg0.example.com"}
 
 # Dependencies required by the script
 DEPS=(
