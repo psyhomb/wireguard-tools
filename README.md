@@ -21,7 +21,7 @@ export SERVER_PORT="52001"                 # Static server port
 export SERVER_PUBLIC_IP="wg0.example.com"  # Server's public IP or FQDN
 ```
 
-```bash
+```plain
 # ./wgcg.sh -h
 Usage: wgcg.sh options
 
@@ -29,6 +29,7 @@ Options:
   -s|--server-config [server_name] [server_wg_ip] [server_port]
   -c|--client-config client_name client_wg_ip [server_name] [server_port] [server_public_ip]
   -q|--gen-qr-code client_name
+  -h|--help
 ```
 
 Generate server keys and config

@@ -23,10 +23,17 @@ DEPS=(
 # Working directory where all generated files will be stored
 WORKING_DIR="${HOME}/wireguard"
 
+# Text colors
+RED="\033[31m"
+GREEN="\033[32m"
+YELLOW="\033[33m"
+BLUE="\033[34m"
+NONE="\033[0m"
+
 # Check if all dependencies are installed
 for DEP in ${DEPS[@]}; do
   if ! which ${DEP} &> /dev/null; then
-    echo "ERROR: ${DEP} tool isn't installed"
+    echo -e "${RED}ERROR${NONE}: ${BLUE}${DEP}${NONE} tool isn't installed"
     RET=1
   fi
 done
@@ -39,12 +46,14 @@ fi
 
 
 help() {
-  echo "Usage: $(basename ${0}) options"
+  echo -e "${BLUE}Usage${NONE}:"
+  echo -e "  ${GREEN}$(basename ${0})${NONE} options"
   echo
-  echo "Options:"
-  echo "  -s|--server-config [server_name] [server_wg_ip] [server_port]"
-  echo "  -c|--client-config client_name client_wg_ip [server_name] [server_port] [server_public_ip]"
-  echo "  -q|--gen-qr-code client_name"
+  echo -e "${BLUE}Options${NONE}:"
+  echo -e "  ${GREEN}-s${NONE}|${GREEN}--server-config${NONE} [server_name] [server_wg_ip] [server_port]"
+  echo -e "  ${GREEN}-c${NONE}|${GREEN}--client-config${NONE} client_name client_wg_ip [server_name] [server_port] [server_public_ip]"
+  echo -e "  ${GREEN}-q${NONE}|${GREEN}--gen-qr-code${NONE} client_name"
+  echo -e "  ${GREEN}-h${NONE}|${GREEN}--help${NONE}"
 }
 
 
@@ -73,7 +82,8 @@ gen_server_config() {
   local server_generated="${WORKING_DIR}/.server-${server_name}.generated"
 
   if [[ -f ${server_private_key} ]]; then
-    echo -n "Server config and keys are already generated, do you want to override it (yes/no): "
+    echo -e "${YELLOW}WARNING${NONE}: This is destructive operation, also it will require regeneration of all client configs!"
+    echo -ne "Server config and keys are already generated, do you want to override it (${GREEN}yes${NONE}/${RED}no${NONE}): "
     read override
 
     [[ ${override} != "yes" ]] && exit 1
@@ -91,7 +101,7 @@ PostDown = /usr/local/bin/wgfw.sh del
 EOF
 
   touch ${server_generated}
-  echo "Server config ${server_config} has been generated successfully!"
+  echo -e "${GREEN}INFO${NONE}: Server config ${BLUE}${server_config}${NONE} has been generated successfully!"
 }
 
 
@@ -117,12 +127,13 @@ gen_client_config() {
   fi
 
   if [[ ! -f ${server_generated} ]]; then
-    echo "Server config and keys could not be found, please use --server-config first"
+    echo -e "${GREEN}INFO${NONE}: Server config and keys could not be found, please use ${GREEN}--server-config${NONE} first"
     exit 1
   fi
 
   if [[ -f ${client_private_key} ]]; then
-    echo -n "Client config and keys are already generated, do you want to override it (yes/no): "
+    echo -e "${YELLOW}WARNING${NONE}: This is destructive operation!"
+    echo -ne "Client config and keys are already generated, do you want to override it (${GREEN}yes${NONE}/${RED}no${NONE}): "
     read override
 
     [[ ${override} != "yes" ]] && exit 1
@@ -163,7 +174,7 @@ PersistentKeepalive = 25
 ### ${client_name} - END
 EOF
 
-  echo "Client config ${client_config} has been generated successfully!"
+  echo -e "${GREEN}INFO${NONE}: Client config ${BLUE}${client_config}${NONE} has been generated successfully!"
 }
 
 
@@ -173,12 +184,12 @@ gen_qr() {
   local config_path="${WORKING_DIR}/client-${config_name}.conf"
 
   if [[ ! -f ${config_path} ]]; then
-    echo "ERROR: Error while generating QR code, config file ${config_path} does not exist"
+    echo -e "${RED}ERROR${NONE}: Error while generating QR code, config file ${BLUE}${config_path}${NONE} does not exist"
     exit 1
   fi
 
   cat ${config_path} | qrencode -o ${config_path}.png && chmod 600 ${config_path}.png
-  echo "QR file ${config_path}.png has been generated successfully!"
+  echo -e "${GREEN}INFO${NONE}: QR file ${BLUE}${config_path}.png${NONE} has been generated successfully!"
 }
 
 
