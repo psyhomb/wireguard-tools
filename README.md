@@ -28,7 +28,7 @@ Usage: wgcg.sh options
 Options:
   -s|--server-config [server_name] [server_wg_ip] [server_port]
   -c|--client-config client_name client_wg_ip [server_name] [server_port] [server_public_ip]
-  -q|--gen-qr-code config_name
+  -q|--gen-qr-code client_name
 ```
 
 Generate server keys and config
