@@ -1,7 +1,7 @@
 wireguard-tools
 ===============
 
-Full documentation for manual Wireguard installation and configuration is available [here](https://gitlab.com/snippets/1897102).
+Full documentation about Wireguard installation and configuration process can be found [here](https://gitlab.com/snippets/1897102).
 
 wgcg.sh
 -------
