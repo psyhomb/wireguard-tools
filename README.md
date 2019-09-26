@@ -15,7 +15,7 @@ This script is created to ease manual process of Wireguard configuration and wil
 Before start using it I would suggest updating default options, otherwise you will have to specify these options from the command line every time you're running the script.
 
 ```bash
-export WGCG_SERVER_NAME="wg0"                   # Specify any server name you like
+export WGCG_SERVER_NAME="wg0"                   # Specify server name not longer than 8 characters (usually it should be same as wireguard interface name e.g. wg0)
 export WGCG_SERVER_WG_IP="10.0.0.1"             # VPN (WG) IP private address
 export WGCG_SERVER_PORT="52001"                 # Static server port
 export WGCG_SERVER_PUBLIC_IP="wg0.example.com"  # Server's public IP or FQDN

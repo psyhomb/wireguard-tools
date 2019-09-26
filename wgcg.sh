@@ -5,7 +5,7 @@
 
 ### Global variables
 # Default options
-# Specify any server name you like
+# Specify server name not longer than 8 characters (usually it should be same as wireguard interface name e.g. wg0)
 SERVER_NAME=${WGCG_SERVER_NAME:-"wg0"}
 # VPN (WG) IP private address
 SERVER_WG_IP=${WGCG_SERVER_WG_IP:-"10.0.0.1"}
