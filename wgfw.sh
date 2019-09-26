@@ -1,4 +1,7 @@
 #!/bin/bash
+# Author: Milos Buncic
+# Date: 2019/09/25
+# Description: Add required Wireguard firewall rules
 
 # Local private interface
 PRIVATE_INTERFACE="eth0"
