@@ -52,9 +52,13 @@ help() {
 gen_keys() {
   local name_prefix="${1}"
 
-  wg genkey | tee ${WORKING_DIR}/${name_prefix}-private.key | wg pubkey > ${WORKING_DIR}/${name_prefix}-public.key
-  [[ ! -f ${WORKING_DIR}/preshared.key ]] && wg genpsk > ${WORKING_DIR}/preshared.key 2> /dev/null
-  chmod 600 ${WORKING_DIR}/{${name_prefix}-private.key,preshared.key}
+  local private_key="${WORKING_DIR}/${name_prefix}-private.key"
+  local public_key="${WORKING_DIR}/${name_prefix}-public.key"
+  local preshared_key="${WORKING_DIR}/preshared.key"
+
+  wg genkey | tee ${private_key} | wg pubkey > ${public_key}
+  [[ ! -f ${preshared_key} ]] && wg genpsk > ${preshared_key} 2> /dev/null
+  chmod 600 ${private_key} ${preshared_key}
 }
 
 
@@ -64,7 +68,11 @@ gen_server_config() {
   local server_wg_ip="${2}"
   local server_port="${3}"
 
-  if [[ -f ${WORKING_DIR}/server-${server_name}-private.key ]]; then
+  local server_private_key="${WORKING_DIR}/server-${server_name}-private.key"
+  local server_config="${WORKING_DIR}/server-${server_name}.conf"
+  local server_generated="${WORKING_DIR}/.server-${server_name}.generated"
+
+  if [[ -f ${server_private_key} ]]; then
     echo -n "Server config and keys are already generated, do you want to override it (yes/no): "
     read override
 
@@ -73,17 +81,17 @@ gen_server_config() {
 
   gen_keys server-${server_name}
 
-  cat > ${WORKING_DIR}/server-${server_name}.conf <<EOF && chmod 600 ${WORKING_DIR}/server-${server_name}.conf
+  cat > ${server_config} <<EOF && chmod 600 ${server_config}
 [Interface]
 Address = ${server_wg_ip}/24
 ListenPort = ${server_port}
-PrivateKey = $(head -1 ${WORKING_DIR}/server-${server_name}-private.key)
+PrivateKey = $(head -1 ${server_private_key})
 PostUp = /usr/local/bin/wgfw.sh add
 PostDown = /usr/local/bin/wgfw.sh del
 EOF
 
-  touch ${WORKING_DIR}/.server-${server_name}.generated
-  echo "Server config ${WORKING_DIR}/server-${server_name}.conf has been generated successfully!"
+  touch ${server_generated}
+  echo "Server config ${server_config} has been generated successfully!"
 }
 
 
@@ -95,59 +103,67 @@ gen_client_config() {
   local server_port="${4}"
   local server_public_ip="${5}"
 
+  local preshared_key="${WORKING_DIR}/preshared.key"
+  local client_private_key="${WORKING_DIR}/client-${client_name}-private.key"
+  local client_public_key="${WORKING_DIR}/client-${client_name}-public.key"
+  local client_config="${WORKING_DIR}/client-${client_name}.conf"
+  local server_public_key="${WORKING_DIR}/server-${server_name}-public.key"
+  local server_config="${WORKING_DIR}/server-${server_name}.conf"
+  local server_generated="${WORKING_DIR}/.server-${server_name}.generated"
+
   if [[ -z ${client_name} ]] || [[ -z ${client_wg_ip} ]]; then
     help
     exit 1
   fi
 
-  if [[ ! -f ${WORKING_DIR}/.server-${server_name}.generated ]]; then
+  if [[ ! -f ${server_generated} ]]; then
     echo "Server config and keys could not be found, please use --server-config first"
     exit 1
   fi
 
-  if [[ -f ${WORKING_DIR}/client-${client_name}-private.key ]]; then
+  if [[ -f ${client_private_key} ]]; then
     echo -n "Client config and keys are already generated, do you want to override it (yes/no): "
     read override
 
     [[ ${override} != "yes" ]] && exit 1
 
     # Delete Peer block if client_name already exist
-    sed -i.backup "/### ${client_name} - START/,/### ${client_name} - END/d" ${WORKING_DIR}/server-${server_name}.conf
+    sed -i.backup "/### ${client_name} - START/,/### ${client_name} - END/d" ${server_config}
     # Delete all blank lines at end of file
-    sed -i.backup -e :a -e '/^\n*$/{$d;N;ba' -e '}' ${WORKING_DIR}/server-${server_name}.conf
+    sed -i.backup -e :a -e '/^\n*$/{$d;N;ba' -e '}' ${server_config}
     # Suppress repeated empty output lines
-    cat -s ${WORKING_DIR}/server-${server_name}.conf > ${WORKING_DIR}/server-${server_name}.conf.backup
-    mv ${WORKING_DIR}/server-${server_name}.conf{.backup,}
+    cat -s ${server_config} > ${server_config}.backup
+    mv ${server_config}.backup ${server_config}
   fi
 
   gen_keys client-${client_name}
 
-  cat > ${WORKING_DIR}/client-${client_name}.conf <<EOF && chmod 600 ${WORKING_DIR}/client-${client_name}.conf
+  cat > ${client_config} <<EOF && chmod 600 ${client_config}
 [Interface]
 Address = ${client_wg_ip}/24
-PrivateKey = $(head -1 ${WORKING_DIR}/client-${client_name}-private.key)
+PrivateKey = $(head -1 ${client_private_key})
 DNS = 1.1.1.1, 1.0.0.1
 
 [Peer]
-PublicKey = $(head -1 ${WORKING_DIR}/server-${server_name}-public.key)
-PresharedKey = $(head -1 ${WORKING_DIR}/preshared.key)
+PublicKey = $(head -1 ${server_public_key})
+PresharedKey = $(head -1 ${preshared_key})
 AllowedIPs = 0.0.0.0/0
 Endpoint = ${server_public_ip}:${server_port}
 PersistentKeepalive = 25
 EOF
 
-  cat >> ${WORKING_DIR}/server-${server_name}.conf <<EOF
+  cat >> ${server_config} <<EOF
 
 ### ${client_name} - START
 [Peer]
-PublicKey = $(head -1 ${WORKING_DIR}/client-${client_name}-public.key)
-PresharedKey = $(head -1 ${WORKING_DIR}/preshared.key)
+PublicKey = $(head -1 ${client_public_key})
+PresharedKey = $(head -1 ${preshared_key})
 AllowedIPs = ${client_wg_ip}/32
 PersistentKeepalive = 25
 ### ${client_name} - END
 EOF
 
-  echo "Client config ${WORKING_DIR}/client-${client_name}.conf has been generated successfully!"
+  echo "Client config ${client_config} has been generated successfully!"
 }
 
 
