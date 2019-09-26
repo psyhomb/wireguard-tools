@@ -6,14 +6,14 @@
 ### Global variables
 # Default options
 # Specify any server name you like
-SERVER_NAME=${SERVER_NAME:-"wg0"}
+SERVER_NAME=${WGCG_SERVER_NAME:-"wg0"}
 # VPN (WG) IP private address
-SERVER_WG_IP=${SERVER_WG_IP:-"10.0.0.1"}
+SERVER_WG_IP=${WGCG_SERVER_WG_IP:-"10.0.0.1"}
 # Static server port
-SERVER_PORT=${SERVER_PORT:-"52001"}
+SERVER_PORT=${WGCG_SERVER_PORT:-"52001"}
 # Server's public IP or FQDN
 # To discover server's public IP use: curl -sSL https://ifconfig.co
-SERVER_PUBLIC_IP=${SERVER_PUBLIC_IP:-"wg0.example.com"}
+SERVER_PUBLIC_IP=${WGCG_SERVER_PUBLIC_IP:-"wg0.example.com"}
 
 # Dependencies required by the script
 DEPS=(
@@ -54,6 +54,12 @@ help() {
   echo -e "  ${GREEN}-c${NONE}|${GREEN}--client-config${NONE} client_name client_wg_ip [server_name] [server_port] [server_public_ip]"
   echo -e "  ${GREEN}-q${NONE}|${GREEN}--gen-qr-code${NONE} client_name"
   echo -e "  ${GREEN}-h${NONE}|${GREEN}--help${NONE}"
+  echo
+  echo -e "${BLUE}Current default options${NONE}:"
+  echo -e "  export WGCG_SERVER_NAME=${GREEN}\"${SERVER_NAME}\"${NONE}"
+  echo -e "  export WGCG_SERVER_WG_IP=${GREEN}\"${SERVER_WG_IP}\"${NONE}"
+  echo -e "  export WGCG_SERVER_PORT=${GREEN}\"${SERVER_PORT}\"${NONE}"
+  echo -e "  export WGCG_SERVER_PUBLIC_IP=${GREEN}\"${SERVER_PUBLIC_IP}\"${NONE}"
 }
 
 
