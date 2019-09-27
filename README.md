@@ -12,7 +12,7 @@ This script is created to ease manual process of Wireguard configuration and wil
 
 ### Usage
 
-Before start using it I would suggest updating default options in [wgcg.vars](./wgcg.vars) file, otherwise you will have to specify these options from the command line every time you run the script.
+Before start using this script I would suggest updating default options in [wgcg.vars](./wgcg.vars) file, otherwise you will have to specify these options from the command line every time you run the script.
 
 ```bash
 # Server name (wireguard interface name e.g. wg0 || wg1 || wg2)
