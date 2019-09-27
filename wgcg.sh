@@ -5,7 +5,7 @@
 
 ### Global variables
 # Default options
-# Specify server name not longer than 8 characters (usually it should be same as wireguard interface name e.g. wg0)
+# Server name (should be same as Wireguard interface name)
 SERVER_NAME=${WGCG_SERVER_NAME:-"wg0"}
 # VPN (WG) IP private address
 SERVER_WG_IP=${WGCG_SERVER_WG_IP:-"10.0.0.1"}
@@ -53,6 +53,7 @@ help() {
   echo -e "  ${GREEN}-s${NONE}|${GREEN}--server-config${NONE} [server_name] [server_wg_ip] [server_port]"
   echo -e "  ${GREEN}-c${NONE}|${GREEN}--client-config${NONE} client_name client_wg_ip [server_name] [server_port] [server_public_ip]"
   echo -e "  ${GREEN}-q${NONE}|${GREEN}--gen-qr-code${NONE} client_name"
+  echo -e "  ${GREEN}-S${NONE}|${GREEN}--sync${NONE} [server_name] [server_public_ip]"
   echo -e "  ${GREEN}-h${NONE}|${GREEN}--help${NONE}"
   echo
   echo -e "${BLUE}Current default options${NONE}:"
@@ -89,10 +90,10 @@ gen_server_config() {
 
   if [[ -f ${server_private_key} ]]; then
     echo -e "${YELLOW}WARNING${NONE}: This is destructive operation, also it will require regeneration of all client configs!"
-    echo -ne "Server config and keys are already generated, do you want to override it (${GREEN}yes${NONE}/${RED}no${NONE}): "
-    read override
+    echo -ne "Server config and keys are already generated, do you want to overwrite it? (${GREEN}yes${NONE}/${RED}no${NONE}): "
+    read answer
 
-    [[ ${override} != "yes" ]] && exit 1
+    [[ ${answer} != "yes" ]] && exit 1
   fi
 
   gen_keys server-${server_name}
@@ -139,10 +140,10 @@ gen_client_config() {
 
   if [[ -f ${client_private_key} ]]; then
     echo -e "${YELLOW}WARNING${NONE}: This is destructive operation!"
-    echo -ne "Client config and keys are already generated, do you want to override it (${GREEN}yes${NONE}/${RED}no${NONE}): "
-    read override
+    echo -ne "Client config and keys are already generated, do you want to overwrite it? (${GREEN}yes${NONE}/${RED}no${NONE}): "
+    read answer
 
-    [[ ${override} != "yes" ]] && exit 1
+    [[ ${answer} != "yes" ]] && exit 1
 
     # Delete Peer block if client_name already exist
     sed -i.backup "/### ${client_name} - START/,/### ${client_name} - END/d" ${server_config}
@@ -199,6 +200,37 @@ gen_qr() {
 }
 
 
+# Sync configuration with server
+wg_sync() {
+  local server_name="${1}"
+  local server_public_ip="${2}"
+
+  local server_config="${WORKING_DIR}/server-${server_name}.conf"
+
+  ssh root@${server_public_ip} "which wg-quick &> /dev/null"
+  if [[ ${?} -ne 0 ]]; then
+    echo -e "${YELLOW}WARNING${NONE}: It looks like ${GREEN}wireguard-tools${NONE} package isn't installed on the server, aborting..."
+    exit 1
+  fi
+
+  rsync -q --chmod 600 ${server_config} root@${server_public_ip}:/etc/wireguard/wg0.conf
+  if [[ ${?} -eq 0 ]]; then
+    echo -e "${GREEN}INFO${NONE}: Server configuration ${server_config} successfully copied over to the server ${server_public_ip}"
+    echo -ne "Do you want to restart Wireguard server? (${GREEN}yes${NONE}/${RED}no${NONE}): "
+    read answer
+
+    if [[ ${answer} == "yes" ]]; then
+      ssh root@${server_public_ip} "
+        systemctl is-active wg-quick@wg0.service &> /dev/null && systemctl restart wg-quick@wg0.service
+      "
+    fi
+  else
+    echo -e "${RED}ERROR${NONE}: Copying configuration ${server_config} to server ${server_public_ip} has failed!"
+    exit 1
+  fi
+}
+
+
 case ${1} in
   '-s'|'--server-config')
     shift
@@ -216,6 +248,11 @@ case ${1} in
     shift
     # client_name
     gen_qr ${1}
+  ;;
+  '-S'|'--sync')
+    shift
+    # server_name, server_public_ip
+    wg_sync ${1:-${SERVER_NAME}} ${2:-${SERVER_PUBLIC_IP}}
   ;;
   *)
     help
