@@ -112,6 +112,7 @@ EOF
 
 
 # Generate client and update server configuration file
+SKIP_ANSWER=false
 gen_client_config() {
   local client_name="${1}"
   local client_wg_ip="${2}"
@@ -138,11 +139,13 @@ gen_client_config() {
   fi
 
   if [[ -f ${client_private_key} ]]; then
-    echo -e "${YELLOW}WARNING${NONE}: This is destructive operation!"
-    echo -ne "Client config and keys are already generated, do you want to overwrite it? (${GREEN}yes${NONE}/${RED}no${NONE}): "
-    read answer
+    if [[ ${SKIP_ANSWER} == false ]]; then
+      echo -e "${YELLOW}WARNING${NONE}: This is destructive operation!"
+      echo -ne "Config and key files for client ${GREEN}${client_name}${NONE} are already generated, do you want to overwrite it? (${GREEN}yes${NONE}/${RED}no${NONE}): "
+      read answer
 
-    [[ ${answer} != "yes" ]] && exit 1
+      [[ ${answer} != "yes" ]] && exit 1
+    fi
 
     # Delete Peer block if client_name already exist
     sed -i.backup "/### ${client_name} - START/,/### ${client_name} - END/d" ${server_config}
@@ -184,22 +187,6 @@ EOF
 }
 
 
-# Generate client configs in batch
-gen_client_config_batch() {
-  local client_batch_csv_file="${1}"
-  local client_name client_wg_ip
-
-  if [[ ! -f ${client_batch_csv_file} ]]; then
-    echo -e "${RED}ERROR${NONE}: Client batch file ${BLUE}${client_batch_csv_file}${NONE} does not exist, please create one first!"
-    exit 1
-  fi
-
-  while IFS=',' read client_name client_wg_ip; do
-    gen_client_config ${client_name} ${client_wg_ip} ${SERVER_NAME} ${SERVER_PORT} ${SERVER_PUBLIC_IP}
-  done < ${client_batch_csv_file}
-}
-
-
 # Generate QR code
 gen_qr() {
   local config_name="${1}"
@@ -212,6 +199,24 @@ gen_qr() {
 
   cat ${config_path} | qrencode -o ${config_path}.png && chmod 600 ${config_path}.png
   echo -e "${GREEN}INFO${NONE}: QR file ${BLUE}${config_path}.png${NONE} has been generated successfully!"
+}
+
+
+# Generate client configs in batch
+gen_client_config_batch() {
+  local client_batch_csv_file="${1}"
+  local client_name client_wg_ip
+
+  if [[ ! -f ${client_batch_csv_file} ]]; then
+    echo -e "${RED}ERROR${NONE}: Client batch file ${BLUE}${client_batch_csv_file}${NONE} does not exist, please create one first!"
+    exit 1
+  fi
+
+  SKIP_ANSWER=true
+  while IFS=',' read client_name client_wg_ip; do
+    gen_client_config ${client_name} ${client_wg_ip} ${SERVER_NAME} ${SERVER_PORT} ${SERVER_PUBLIC_IP}
+    gen_qr ${client_name}
+  done < <(egrep -v '^(#|$)' ${client_batch_csv_file})
 }
 
 
