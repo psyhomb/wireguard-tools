@@ -34,7 +34,7 @@ NONE="\033[0m"
 # Check if all dependencies are installed
 for DEP in ${DEPS[@]}; do
   if ! which ${DEP} &> /dev/null; then
-    echo -e "${RED}ERROR${NONE}: ${BLUE}${DEP}${NONE} tool isn't installed"
+    echo -e "${RED}ERROR${NONE}: ${BLUE}${DEP}${NONE} tool isn't installed!"
     RET=1
   fi
 done
@@ -48,6 +48,7 @@ help() {
   echo -e "${BLUE}Options${NONE}:"
   echo -e "  ${GREEN}-s${NONE}|${GREEN}--server-config${NONE} [server_name] [server_wg_ip] [server_port]"
   echo -e "  ${GREEN}-c${NONE}|${GREEN}--client-config${NONE} client_name client_wg_ip [server_name] [server_port] [server_public_ip]"
+  echo -e "  ${GREEN}-B${NONE}|${GREEN}--client-config-batch${NONE} filename.csv"
   echo -e "  ${GREEN}-q${NONE}|${GREEN}--gen-qr-code${NONE} client_name"
   echo -e "  ${GREEN}-S${NONE}|${GREEN}--sync${NONE} [server_name] [server_public_ip]"
   echo -e "  ${GREEN}-h${NONE}|${GREEN}--help${NONE}"
@@ -132,7 +133,7 @@ gen_client_config() {
   fi
 
   if [[ ! -f ${server_generated} ]]; then
-    echo -e "${GREEN}INFO${NONE}: Server config and keys could not be found, please use ${GREEN}--server-config${NONE} first"
+    echo -e "${GREEN}INFO${NONE}: Server config and keys could not be found, please run script with ${GREEN}--server-config${NONE} option first"
     exit 1
   fi
 
@@ -183,13 +184,29 @@ EOF
 }
 
 
+# Generate client configs in batch
+gen_client_config_batch() {
+  local client_batch_csv_file="${1}"
+  local client_name client_wg_ip
+
+  if [[ ! -f ${client_batch_csv_file} ]]; then
+    echo -e "${RED}ERROR${NONE}: Client batch file ${BLUE}${client_batch_csv_file}${NONE} does not exist, please create one first!"
+    exit 1
+  fi
+
+  while IFS=',' read client_name client_wg_ip; do
+    gen_client_config ${client_name} ${client_wg_ip} ${SERVER_NAME} ${SERVER_PORT} ${SERVER_PUBLIC_IP}
+  done < ${client_batch_csv_file}
+}
+
+
 # Generate QR code
 gen_qr() {
   local config_name="${1}"
   local config_path="${WORKING_DIR}/client-${config_name}.conf"
 
   if [[ ! -f ${config_path} ]]; then
-    echo -e "${RED}ERROR${NONE}: Error while generating QR code, config file ${BLUE}${config_path}${NONE} does not exist"
+    echo -e "${RED}ERROR${NONE}: Error while generating QR code, config file ${BLUE}${config_path}${NONE} does not exist!"
     exit 1
   fi
 
@@ -245,6 +262,11 @@ case ${1} in
     gen_client_config ${1:-''} ${2:-''} ${3:-${SERVER_NAME}} ${4:-${SERVER_PORT}} ${5:-${SERVER_PUBLIC_IP}}
     # client_name
     gen_qr ${1}
+  ;;
+  '-B'|'--client-config-batch')
+    shift
+    # client_batch_csv_file
+    gen_client_config_batch ${1}
   ;;
   '-q'|'--gen-qr-code')
     shift

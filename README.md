@@ -41,6 +41,7 @@ Usage:
 Options:
   -s|--server-config [server_name] [server_wg_ip] [server_port]
   -c|--client-config client_name client_wg_ip [server_name] [server_port] [server_public_ip]
+  -B|--client-config-batch filename.csv
   -q|--gen-qr-code client_name
   -S|--sync [server_name] [server_public_ip]
   -h|--help
@@ -62,6 +63,21 @@ Generate client keys, client config and update server config (add a new Peer)
 
 ```bash
 ./wgcg.sh -c foo 10.0.0.2
+```
+
+or if you want to generate multiple client configs, create `client-configs.csv` file
+
+```bash
+cat > client-configs.csv <<'EOF'
+foo,10.0.0.2
+bar,10.0.0.3
+EOF
+```
+
+and run
+
+```bash
+./wgcg.sh -B client-configs.csv
 ```
 
 Copy over updated server configuration to the server
