@@ -46,9 +46,10 @@ help() {
   echo -e "  ${GREEN}$(basename ${0})${NONE} options"
   echo
   echo -e "${BLUE}Options${NONE}:"
-  echo -e "  ${GREEN}-s${NONE}|${GREEN}--server-config${NONE} [server_name] [server_wg_ip] [server_port]"
-  echo -e "  ${GREEN}-c${NONE}|${GREEN}--client-config${NONE} client_name client_wg_ip [server_name] [server_port] [server_public_ip]"
-  echo -e "  ${GREEN}-B${NONE}|${GREEN}--client-config-batch${NONE} filename.csv"
+  echo -e "  ${GREEN}-s${NONE}|${GREEN}--add-server-config${NONE} [server_name] [server_wg_ip] [server_port]"
+  echo -e "  ${GREEN}-c${NONE}|${GREEN}--add-client-config${NONE} client_name client_wg_ip [server_name] [server_port] [server_public_ip]"
+  echo -e "  ${GREEN}-B${NONE}|${GREEN}--add-clients-batch${NONE} filename.csv"
+  echo -e "  ${GREEN}-r${NONE}|${GREEN}--rm-client-config${NONE} client_name [server_name]"
   echo -e "  ${GREEN}-q${NONE}|${GREEN}--gen-qr-code${NONE} client_name"
   echo -e "  ${GREEN}-S${NONE}|${GREEN}--sync${NONE} [server_name] [server_public_ip]"
   echo -e "  ${GREEN}-h${NONE}|${GREEN}--help${NONE}"
@@ -58,6 +59,44 @@ help() {
   echo -e "  WGCG_SERVER_WG_IP=${GREEN}\"${SERVER_WG_IP}\"${NONE}"
   echo -e "  WGCG_SERVER_PORT=${GREEN}\"${SERVER_PORT}\"${NONE}"
   echo -e "  WGCG_SERVER_PUBLIC_IP=${GREEN}\"${SERVER_PUBLIC_IP}\"${NONE}"
+}
+
+
+# Remove client configuration file
+remove_client_config() {
+  local client_name="${1}"
+  local server_name="${2}"
+
+  local client_config="${WORKING_DIR}/client-${client_name}.conf"
+  local server_config="${WORKING_DIR}/server-${server_name}.conf"
+
+  if [[ -z ${client_name} ]] || [[ -z ${server_name} ]]; then
+    help
+    exit 1
+  fi
+
+  if [[ ! -f ${client_config} ]]; then
+    echo -e "${RED}ERROR${NONE}: Client config ${BLUE}${client_config}${NONE} could not be found!"
+    exit 1
+  fi
+
+  if [[ ! -f ${server_config} ]]; then
+    echo -e "${RED}ERROR${NONE}: Server config ${BLUE}${server_config}${NONE} could not be found!"
+    exit 1
+  fi
+
+  # Delete Peer block if client_name exist
+  sed -i.backup "/### ${client_name} - START/,/### ${client_name} - END/d" ${server_config}
+  # Delete all empty lines at end of file
+  sed -i.backup -e :a -e '/^\n*$/{$d;N;ba' -e '}' ${server_config}
+  # Suppress repeated empty output lines
+  cat -s ${server_config} > ${server_config}.backup
+  mv ${server_config}.backup ${server_config}
+
+  # Delete config and key files
+  rm -f ${WORKING_DIR}/client-${client_name}{.conf,.conf.png,-private.key,-public.key}
+
+  echo -e "${GREEN}INFO${NONE}: Client config ${RED}${client_config}${NONE} has been successfully removed!"
 }
 
 
@@ -147,13 +186,7 @@ gen_client_config() {
       [[ ${answer} != "yes" ]] && exit 1
     fi
 
-    # Delete Peer block if client_name already exist
-    sed -i.backup "/### ${client_name} - START/,/### ${client_name} - END/d" ${server_config}
-    # Delete all blank lines at end of file
-    sed -i.backup -e :a -e '/^\n*$/{$d;N;ba' -e '}' ${server_config}
-    # Suppress repeated empty output lines
-    cat -s ${server_config} > ${server_config}.backup
-    mv ${server_config}.backup ${server_config}
+    remove_client_config ${client_name} ${server_name}
   fi
 
   gen_keys client-${client_name}
@@ -256,19 +289,24 @@ wg_sync() {
 
 
 case ${1} in
-  '-s'|'--server-config')
+  '-s'|'--add-server-config')
     shift
     # server_name, server_wg_ip, server_port
     gen_server_config ${1:-${SERVER_NAME}} ${2:-${SERVER_WG_IP}} ${3:-${SERVER_PORT}}
   ;;
-  '-c'|'--client-config')
+  '-c'|'--add-client-config')
     shift
     # client_name, client_wg_ip, server_name, server_port, server_public_ip
     gen_client_config ${1:-''} ${2:-''} ${3:-${SERVER_NAME}} ${4:-${SERVER_PORT}} ${5:-${SERVER_PUBLIC_IP}}
     # client_name
     gen_qr ${1}
   ;;
-  '-B'|'--client-config-batch')
+  '-r'|'--rm-client-config')
+    shift
+    # client_name, server_name
+    remove_client_config ${1:-''} ${2:-${SERVER_NAME}}
+  ;;
+  '-B'|'--add-clients-batch')
     shift
     # client_batch_csv_file
     gen_client_config_batch ${1}

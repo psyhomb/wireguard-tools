@@ -39,9 +39,10 @@ Usage:
   wgcg.sh options
 
 Options:
-  -s|--server-config [server_name] [server_wg_ip] [server_port]
-  -c|--client-config client_name client_wg_ip [server_name] [server_port] [server_public_ip]
-  -B|--client-config-batch filename.csv
+  -s|--add-server-config [server_name] [server_wg_ip] [server_port]
+  -c|--add-client-config client_name client_wg_ip [server_name] [server_port] [server_public_ip]
+  -B|--add-clients-batch filename.csv
+  -r|--rm-client-config client_name [server_name]
   -q|--gen-qr-code client_name
   -S|--sync [server_name] [server_public_ip]
   -h|--help
@@ -59,7 +60,7 @@ Generate server keys and config
 ./wgcg.sh -s
 ```
 
-Generate client keys, client config and update server config (add a new Peer)
+Generate client config, PKI key pairs and update server config (add new Peer block)
 
 ```bash
 ./wgcg.sh -c foo 10.0.0.2
@@ -80,6 +81,12 @@ and run
 
 ```bash
 ./wgcg.sh -B client-configs.csv
+```
+
+Remove client config, PKI key pairs and update server config (remove Peer block)
+
+```bash
+./wgcg.sh -r foo
 ```
 
 Copy over updated server configuration to the server
