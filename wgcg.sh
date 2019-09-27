@@ -216,7 +216,7 @@ wg_sync() {
   rsync -q --chmod 600 ${server_config} root@${server_public_ip}:/etc/wireguard/wg0.conf
   if [[ ${?} -eq 0 ]]; then
     echo -e "${GREEN}INFO${NONE}: Server configuration ${server_config} successfully copied over to the server ${server_public_ip}"
-    echo -ne "Do you want to restart Wireguard server? (${GREEN}yes${NONE}/${RED}no${NONE}): "
+    echo -ne "Do you want to restart wg-quick service? (${GREEN}yes${NONE}/${RED}no${NONE}): "
     read answer
 
     if [[ ${answer} == "yes" ]]; then
