@@ -5,7 +5,7 @@
 
 ### Global variables
 # Default options
-# Server name (should be same as Wireguard interface name)
+# Server name (wireguard interface name e.g. wg0 || wg1 || wg2)
 SERVER_NAME=${WGCG_SERVER_NAME:-"wg0"}
 # VPN (WG) IP private address
 SERVER_WG_IP=${WGCG_SERVER_WG_IP:-"10.0.0.1"}
@@ -13,7 +13,7 @@ SERVER_WG_IP=${WGCG_SERVER_WG_IP:-"10.0.0.1"}
 SERVER_PORT=${WGCG_SERVER_PORT:-"52001"}
 # Server's public IP or FQDN
 # To discover server's public IP use: curl -sSL https://ifconfig.co
-SERVER_PUBLIC_IP=${WGCG_SERVER_PUBLIC_IP:-"wg0.example.com"}
+SERVER_PUBLIC_IP=${WGCG_SERVER_PUBLIC_IP:-"wg.example.com"}
 
 # Dependencies required by the script
 DEPS=(
@@ -30,6 +30,7 @@ YELLOW="\033[33m"
 BLUE="\033[34m"
 NONE="\033[0m"
 
+
 # Check if all dependencies are installed
 for DEP in ${DEPS[@]}; do
   if ! which ${DEP} &> /dev/null; then
@@ -38,11 +39,6 @@ for DEP in ${DEPS[@]}; do
   fi
 done
 [[ ${RET} -eq 1 ]] && exit 1
-
-# Create working directory if doesn't exist
-if [[ ! -d ${WORKING_DIR} ]]; then
-  mkdir -p ${WORKING_DIR}
-fi
 
 
 help() {
@@ -57,10 +53,10 @@ help() {
   echo -e "  ${GREEN}-h${NONE}|${GREEN}--help${NONE}"
   echo
   echo -e "${BLUE}Current default options${NONE}:"
-  echo -e "  export WGCG_SERVER_NAME=${GREEN}\"${SERVER_NAME}\"${NONE}"
-  echo -e "  export WGCG_SERVER_WG_IP=${GREEN}\"${SERVER_WG_IP}\"${NONE}"
-  echo -e "  export WGCG_SERVER_PORT=${GREEN}\"${SERVER_PORT}\"${NONE}"
-  echo -e "  export WGCG_SERVER_PUBLIC_IP=${GREEN}\"${SERVER_PUBLIC_IP}\"${NONE}"
+  echo -e "  WGCG_SERVER_NAME=${GREEN}\"${SERVER_NAME}\"${NONE}"
+  echo -e "  WGCG_SERVER_WG_IP=${GREEN}\"${SERVER_WG_IP}\"${NONE}"
+  echo -e "  WGCG_SERVER_PORT=${GREEN}\"${SERVER_PORT}\"${NONE}"
+  echo -e "  WGCG_SERVER_PUBLIC_IP=${GREEN}\"${SERVER_PUBLIC_IP}\"${NONE}"
 }
 
 
@@ -83,6 +79,8 @@ gen_server_config() {
   local server_name="${1}"
   local server_wg_ip="${2}"
   local server_port="${3}"
+
+  [[ ! -d ${WORKING_DIR} ]] && mkdir -p ${WORKING_DIR}
 
   local server_private_key="${WORKING_DIR}/server-${server_name}-private.key"
   local server_config="${WORKING_DIR}/server-${server_name}.conf"
@@ -213,19 +211,23 @@ wg_sync() {
     exit 1
   fi
 
-  rsync -q --chmod 600 ${server_config} root@${server_public_ip}:/etc/wireguard/wg0.conf
+  rsync -q --chmod 600 ${server_config} root@${server_public_ip}:/etc/wireguard/${server_name}.conf
   if [[ ${?} -eq 0 ]]; then
-    echo -e "${GREEN}INFO${NONE}: Server configuration ${server_config} successfully copied over to the server ${server_public_ip}"
-    echo -ne "Do you want to restart wg-quick service? (${GREEN}yes${NONE}/${RED}no${NONE}): "
+    echo -e "${GREEN}INFO${NONE}: Server configuration ${BLUE}${server_config}${NONE} successfully copied over to the server ${BLUE}${server_public_ip}${NONE}"
+    echo -ne "Do you want to restart ${GREEN}wg-quick${NONE} service? (${GREEN}yes${NONE}/${RED}no${NONE}): "
     read answer
 
     if [[ ${answer} == "yes" ]]; then
       ssh root@${server_public_ip} "
-        systemctl is-active wg-quick@wg0.service &> /dev/null && systemctl restart wg-quick@wg0.service
+        if ! systemctl is-enabled wg-quick@${server_name}.service &> /dev/null; then
+          systemctl enable --now wg-quick@${server_name}.service &> /dev/null
+          exit 0
+        fi
+        systemctl is-active wg-quick@${server_name}.service &> /dev/null && systemctl restart wg-quick@${server_name}.service
       "
     fi
   else
-    echo -e "${RED}ERROR${NONE}: Copying configuration ${server_config} to server ${server_public_ip} has failed!"
+    echo -e "${RED}ERROR${NONE}: Copying configuration ${BLUE}${server_config}${NONE} to server ${BLUE}${server_public_ip}${NONE} has failed!"
     exit 1
   fi
 }

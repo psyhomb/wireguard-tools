@@ -12,14 +12,26 @@ This script is created to ease manual process of Wireguard configuration and wil
 
 ### Usage
 
-Before start using it I would suggest updating default options, otherwise you will have to specify these options from the command line every time you're running the script.
+Before start using it I would suggest updating default options in [wgcg.vars](./wgcg.vars) file, otherwise you will have to specify these options from the command line every time you run the script.
 
 ```bash
-export WGCG_SERVER_NAME="wg0"                   # Server name
-export WGCG_SERVER_WG_IP="10.0.0.1"             # VPN (WG) IP private address
-export WGCG_SERVER_PORT="52001"                 # Static server port
-export WGCG_SERVER_PUBLIC_IP="wg0.example.com"  # Server's public IP or FQDN
+# Server name (wireguard interface name e.g. wg0 || wg1 || wg2)
+export WGCG_SERVER_NAME="wg0"
+# VPN (WG) IP private address
+export WGCG_SERVER_WG_IP="10.0.0.1"
+# Static server port
+export WGCG_SERVER_PORT="52001"
+# Server's public IP or FQDN
+export WGCG_SERVER_PUBLIC_IP="wg.example.com"
 ```
+
+Export variables defined in [wgcg.vars](./wgcg.vars) file
+
+```bash
+source wgcg.vars
+```
+
+Print help and current default options
 
 ```plain
 # ./wgcg.sh -h
@@ -34,10 +46,10 @@ Options:
   -h|--help
 
 Current default options:
-  export WGCG_SERVER_NAME="wg0"
-  export WGCG_SERVER_WG_IP="10.0.0.1"
-  export WGCG_SERVER_PORT="52001"
-  export WGCG_SERVER_PUBLIC_IP="wg0.example.com"
+  WGCG_SERVER_NAME="wg0"
+  WGCG_SERVER_WG_IP="10.0.0.1"
+  WGCG_SERVER_PORT="52001"
+  WGCG_SERVER_PUBLIC_IP="wg.example.com"
 ```
 
 Generate server keys and config
