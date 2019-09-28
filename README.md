@@ -23,6 +23,8 @@ export WGCG_SERVER_WG_IP="10.0.0.1"
 export WGCG_SERVER_PORT="52001"
 # Server's public IP or FQDN
 export WGCG_SERVER_PUBLIC_IP="wg.example.com"
+# All configuration and key files will be stored in this directory
+export WGCG_WORKING_DIR="${HOME}/wireguard/${WGCG_SERVER_NAME}"
 ```
 
 Export variables defined in [wgcg.vars](./wgcg.vars) file
@@ -53,6 +55,7 @@ Current default options:
   WGCG_SERVER_WG_IP="10.0.0.1"
   WGCG_SERVER_PORT="52001"
   WGCG_SERVER_PUBLIC_IP="wg.example.com"
+  WGCG_WORKING_DIR="/home/username/wireguard/wg0"
 ```
 
 Generate server keys and config

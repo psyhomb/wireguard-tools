@@ -14,15 +14,9 @@ SERVER_PORT=${WGCG_SERVER_PORT:-"52001"}
 # Server's public IP or FQDN
 # To discover server's public IP use: curl -sSL https://ifconfig.co
 SERVER_PUBLIC_IP=${WGCG_SERVER_PUBLIC_IP:-"wg.example.com"}
-
-# Dependencies required by the script
-DEPS=(
-  "wg"
-  "qrencode"
-  "rsync"
-)
 # Working directory where all generated files will be stored
-WORKING_DIR="${HOME}/wireguard"
+WORKING_DIR=${WGCG_WORKING_DIR:-"${HOME}/wireguard"}
+
 
 # Text colors
 RED="\033[31m"
@@ -31,6 +25,12 @@ YELLOW="\033[33m"
 BLUE="\033[34m"
 NONE="\033[0m"
 
+# Dependencies required by the script
+DEPS=(
+  "wg"
+  "qrencode"
+  "rsync"
+)
 
 # Check if all dependencies are installed
 for DEP in ${DEPS[@]}; do
@@ -61,6 +61,7 @@ help() {
   echo -e "  WGCG_SERVER_WG_IP=${GREEN}\"${SERVER_WG_IP}\"${NONE}"
   echo -e "  WGCG_SERVER_PORT=${GREEN}\"${SERVER_PORT}\"${NONE}"
   echo -e "  WGCG_SERVER_PUBLIC_IP=${GREEN}\"${SERVER_PUBLIC_IP}\"${NONE}"
+  echo -e "  WGCG_WORKING_DIR=${GREEN}\"${WORKING_DIR}\"${NONE}"
 }
 
 
