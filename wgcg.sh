@@ -273,7 +273,7 @@ gen_client_config_batch() {
 
 # List used private IPs
 wg_list_used_ips() {
-  [[ ! -d ${WORKING_DIR} ]] && mkdir -p ${WORKING_DIR}
+  [[ ! -d ${WORKING_DIR} ]] && exit 0
 
   for client_config in $(find ${WORKING_DIR} -maxdepth 1 -name "client-*.conf"); do
     ip_client_list="${GREEN}$(awk -F'[ /]' '/^Address =/ {print $(NF-1)}' ${client_config})${NONE} => ${BLUE}${client_config}${NONE}\n${ip_client_list}"
