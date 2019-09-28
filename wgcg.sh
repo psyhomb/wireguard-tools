@@ -19,6 +19,7 @@ SERVER_PUBLIC_IP=${WGCG_SERVER_PUBLIC_IP:-"wg.example.com"}
 DEPS=(
   "wg"
   "qrencode"
+  "rsync"
 )
 # Working directory where all generated files will be stored
 WORKING_DIR="${HOME}/wireguard"
