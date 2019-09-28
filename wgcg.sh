@@ -190,7 +190,7 @@ gen_client_config() {
 
     remove_client_config ${client_name} ${server_name}
   else
-    if find ${WORKING_DIR} | grep -q "client-*.conf"; then
+    if find ${WORKING_DIR} | egrep -q "client-.*\.conf$"; then
       client_config_match=$(grep -l "^Address = ${client_wg_ip}" ${WORKING_DIR}/client-*.conf)
       if [[ -n ${client_config_match} ]]; then
         echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} already in use => ${BLUE}${client_config_match}${NONE}"
