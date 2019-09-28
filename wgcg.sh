@@ -266,9 +266,12 @@ gen_client_config_batch() {
 
 # List used private IPs
 wg_list_used_ips() {
+  [[ ! -d ${WORKING_DIR} ]] && mkdir -p ${WORKING_DIR}
+
   for client_config in $(find ${WORKING_DIR} -name "client-*.conf"); do
     ip_client_list="${GREEN}$(awk -F'[ /]' '/^Address =/ {print $(NF-1)}' ${client_config})${NONE} => ${BLUE}${client_config}${NONE}\n${ip_client_list}"
   done
+
   echo -ne ${ip_client_list} | sort -k1n
 }
 
