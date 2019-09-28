@@ -197,7 +197,7 @@ gen_client_config() {
 
     remove_client_config ${client_name} ${server_name}
   else
-    if find ${WORKING_DIR} | egrep -q "client-.*\.conf$"; then
+    if find ${WORKING_DIR} -maxdepth 1 | egrep -q "client-.*\.conf$"; then
       client_config_match=$(grep -l "^Address = ${client_wg_ip}" ${WORKING_DIR}/client-*.conf)
       if [[ -n ${client_config_match} ]]; then
         echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} already in use => ${BLUE}${client_config_match}${NONE}"
@@ -275,7 +275,7 @@ gen_client_config_batch() {
 wg_list_used_ips() {
   [[ ! -d ${WORKING_DIR} ]] && mkdir -p ${WORKING_DIR}
 
-  for client_config in $(find ${WORKING_DIR} -name "client-*.conf"); do
+  for client_config in $(find ${WORKING_DIR} -maxdepth 1 -name "client-*.conf"); do
     ip_client_list="${GREEN}$(awk -F'[ /]' '/^Address =/ {print $(NF-1)}' ${client_config})${NONE} => ${BLUE}${client_config}${NONE}\n${ip_client_list}"
   done
 
