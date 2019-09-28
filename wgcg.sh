@@ -179,6 +179,12 @@ gen_client_config() {
     exit 1
   fi
 
+  server_config_match=$(grep -l "^Address = ${client_wg_ip}" ${server_config})
+  if [[ -n ${server_config_match} ]]; then
+    echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} is used by server => ${BLUE}${server_config_match}${NONE}"
+    return 1
+  fi
+
   if [[ -f ${client_private_key} ]]; then
     if [[ ${SKIP_ANSWER} == false ]]; then
       echo -e "${YELLOW}WARNING${NONE}: This is destructive operation!"
@@ -190,12 +196,6 @@ gen_client_config() {
 
     remove_client_config ${client_name} ${server_name}
   else
-    server_config_match=$(grep -l "^Address = ${client_wg_ip}" ${server_config})
-    if [[ -n ${server_config_match} ]]; then
-      echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} is used by server => ${BLUE}${server_config_match}${NONE}"
-      return 1
-    fi
-
     if find ${WORKING_DIR} | egrep -q "client-.*\.conf$"; then
       client_config_match=$(grep -l "^Address = ${client_wg_ip}" ${WORKING_DIR}/client-*.conf)
       if [[ -n ${client_config_match} ]]; then
@@ -327,6 +327,7 @@ case ${1} in
     shift
     # client_name, client_wg_ip, server_name, server_port, server_public_ip
     gen_client_config ${1:-''} ${2:-''} ${3:-${SERVER_NAME}} ${4:-${SERVER_PORT}} ${5:-${SERVER_PUBLIC_IP}}
+    [[ ${?} -ne 0 ]] && exit 1
     # client_name
     gen_qr ${1}
   ;;
