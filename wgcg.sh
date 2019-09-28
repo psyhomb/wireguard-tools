@@ -52,6 +52,7 @@ help() {
   echo -e "  ${GREEN}-B${NONE}|${GREEN}--add-clients-batch${NONE} filename.csv"
   echo -e "  ${GREEN}-r${NONE}|${GREEN}--rm-client-config${NONE} client_name [server_name]"
   echo -e "  ${GREEN}-q${NONE}|${GREEN}--gen-qr-code${NONE} client_name"
+  echo -e "  ${GREEN}-l${NONE}|${GREEN}--list-used-ips${NONE}"
   echo -e "  ${GREEN}-S${NONE}|${GREEN}--sync${NONE} [server_name] [server_public_ip]"
   echo -e "  ${GREEN}-h${NONE}|${GREEN}--help${NONE}"
   echo
@@ -188,6 +189,14 @@ gen_client_config() {
     fi
 
     remove_client_config ${client_name} ${server_name}
+  else
+    if find ${WORKING_DIR} | grep -q "client-*.conf"; then
+      client_config_match=$(grep -l "^Address = ${client_wg_ip}" ${WORKING_DIR}/client-*.conf)
+      if [[ -n ${client_config_match} ]]; then
+        echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} already in use => ${BLUE}${client_config_match}${NONE}"
+        return 1
+      fi
+    fi
   fi
 
   gen_keys client-${client_name}
@@ -249,8 +258,18 @@ gen_client_config_batch() {
   SKIP_ANSWER=true
   while IFS=',' read client_name client_wg_ip; do
     gen_client_config ${client_name} ${client_wg_ip} ${SERVER_NAME} ${SERVER_PORT} ${SERVER_PUBLIC_IP}
+    [[ ${?} -ne 0 ]] && continue
     gen_qr ${client_name}
   done < <(egrep -v '^(#|$)' ${client_batch_csv_file})
+}
+
+
+# List used private IPs
+wg_list_used_ips() {
+  for client_config in $(find ${WORKING_DIR} -name "client-*.conf"); do
+    ip_client_list="${GREEN}$(awk -F'[ /]' '/^Address =/ {print $(NF-1)}' ${client_config})${NONE} => ${BLUE}${client_config}${NONE}\n${ip_client_list}"
+  done
+  echo -ne ${ip_client_list} | sort -k1n
 }
 
 
@@ -316,6 +335,9 @@ case ${1} in
     shift
     # client_name
     gen_qr ${1}
+  ;;
+  '-l'|'--list-used-ips')
+    wg_list_used_ips
   ;;
   '-S'|'--sync')
     shift

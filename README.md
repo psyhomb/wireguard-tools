@@ -44,6 +44,7 @@ Options:
   -B|--add-clients-batch filename.csv
   -r|--rm-client-config client_name [server_name]
   -q|--gen-qr-code client_name
+  -l|--list-used-ips
   -S|--sync [server_name] [server_public_ip]
   -h|--help
 
