@@ -65,6 +65,48 @@ help() {
 }
 
 
+# Validator for IP addresses and service ports
+validator() {
+  local mode="${1}"
+  local value="${2}"
+  local ret regex ip_octets
+
+  ret=0
+  case ${mode} in
+    'ipaddress')
+      regex='^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'
+      ip_address=${value}
+      ip_octets=(${value//./ })
+
+      if [[ ${ip_address} =~ ${regex} ]]; then
+        for ip_octet in ${ip_octets[@]}; do
+          if [[ ${ip_octet} -gt 255 ]]; then
+            ret=1
+            break
+          fi
+
+          if [[ ${#ip_octet} -gt 1 ]] && [[ ${ip_octet:0:1} -eq 0 ]]; then
+            ret=1
+            break
+          fi
+        done
+      else
+        ret=1
+      fi
+    ;;
+    'svcport')
+      regex='^[0-9]{1,5}$'
+      svc_port=${value}
+
+      if [[ ! ${svc_port} =~ ${regex} ]] || [[ ${svc_port} -gt 65535 ]]; then
+        ret=1
+      fi
+  esac
+
+  return ${ret}
+}
+
+
 # Remove client configuration file
 remove_client_config() {
   local client_name="${1}"
@@ -129,6 +171,18 @@ gen_server_config() {
   local server_config="${WORKING_DIR}/server-${server_name}.conf"
   local server_generated="${WORKING_DIR}/.server-${server_name}.generated"
 
+  validator ipaddress ${server_wg_ip}
+  if [[ ${?} -ne 0 ]]; then
+    echo -e "${RED}ERROR${NONE}: ${RED}${server_wg_ip}${NONE} is not valid IP address!"
+    exit 1
+  fi
+
+  validator svcport ${server_port}
+  if [[ ${?} -ne 0 ]]; then
+    echo -e "${RED}ERROR${NONE}: ${RED}${server_port}${NONE} is not valid port number!"
+    exit 1
+  fi
+
   if [[ -f ${server_private_key} ]]; then
     echo -e "${YELLOW}WARNING${NONE}: This is destructive operation, also it will require regeneration of all client configs!"
     echo -ne "Server config and keys are already generated, do you want to overwrite it? (${GREEN}yes${NONE}/${RED}no${NONE}): "
@@ -181,6 +235,18 @@ gen_client_config() {
     exit 1
   fi
 
+  validator ipaddress ${client_wg_ip}
+  if [[ ${?} -ne 0 ]]; then
+    echo -e "${RED}ERROR${NONE}: ${RED}${client_wg_ip}${NONE} is not valid IP address!"
+    return 1
+  fi
+
+  validator svcport ${server_port}
+  if [[ ${?} -ne 0 ]]; then
+    echo -e "${RED}ERROR${NONE}: ${RED}${server_port}${NONE} is not valid port number!"
+    return 1
+  fi
+
   server_config_match=$(grep -l "^Address = ${client_wg_ip}" ${server_config})
   if [[ -n ${server_config_match} ]]; then
     echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} is used by server => ${BLUE}${server_config_match}${NONE}"
@@ -199,7 +265,7 @@ gen_client_config() {
       echo -ne "Config and key files for client ${GREEN}${client_name}${NONE} are already generated, do you want to overwrite it? (${GREEN}yes${NONE}/${RED}no${NONE}): "
       read answer
 
-      [[ ${answer} != "yes" ]] && exit 1
+      [[ ${answer} != "yes" ]] && return 1
     fi
 
     remove_client_config ${client_name} ${server_name}
