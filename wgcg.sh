@@ -299,6 +299,11 @@ wg_sync() {
 
   local server_config="${WORKING_DIR}/server-${server_name}.conf"
 
+  if [[ ! -f ${server_config} ]]; then
+    echo -e "${RED}ERROR${NONE}: Server config ${BLUE}${server_config}${NONE} does not exist, aborting sync command..."
+    exit 1
+  fi
+
   ssh root@${server_public_ip} "which wg-quick &> /dev/null"
   if [[ ${?} -ne 0 ]]; then
     echo -e "${YELLOW}WARNING${NONE}: It looks like ${GREEN}wireguard-tools${NONE} package isn't installed on the server, aborting..."
