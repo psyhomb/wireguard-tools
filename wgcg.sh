@@ -161,6 +161,7 @@ gen_client_config() {
   local server_name="${3}"
   local server_port="${4}"
   local server_public_ip="${5}"
+  local server_wg_ip client_config_match server_config_match
 
   local preshared_key="${WORKING_DIR}/preshared.key"
   local client_private_key="${WORKING_DIR}/client-${client_name}-private.key"
@@ -183,6 +184,12 @@ gen_client_config() {
   server_config_match=$(grep -l "^Address = ${client_wg_ip}" ${server_config})
   if [[ -n ${server_config_match} ]]; then
     echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} is used by server => ${BLUE}${server_config_match}${NONE}"
+    return 1
+  fi
+
+  server_wg_ip=$(awk -F'[ /]' '/^Address =/ {print $(NF-1)}' ${server_config})
+  if [[ ${server_wg_ip%.*} != ${client_wg_ip%.*} ]]; then
+    echo -e "${RED}ERROR${NONE}: Client private IP address ${RED}${client_wg_ip}${NONE} does not belong to the range: ${GREEN}${server_wg_ip%.*}.1${NONE} - ${GREEN}${server_wg_ip%.*}.254${NONE}"
     return 1
   fi
 
@@ -273,6 +280,8 @@ gen_client_config_batch() {
 
 # List used private IPs
 wg_list_used_ips() {
+  local ip_client_list
+
   [[ ! -d ${WORKING_DIR} ]] && exit 0
 
   for client_config in $(find ${WORKING_DIR} -maxdepth 1 -name "client-*.conf"); do
