@@ -36,10 +36,10 @@ DEPS=(
 for DEP in ${DEPS[@]}; do
   if ! which ${DEP} &> /dev/null; then
     echo -e "${RED}ERROR${NONE}: ${BLUE}${DEP}${NONE} tool isn't installed!"
-    RET=1
+    STAT=1
   fi
 done
-[[ ${RET} -eq 1 ]] && exit 1
+[[ ${STAT} -eq 1 ]] && exit 1
 
 
 help() {
