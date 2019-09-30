@@ -69,7 +69,7 @@ help() {
 validator() {
   local mode="${1}"
   local value="${2}"
-  local ret regex ip_octets
+  local ret regex ip_octets fqdn
 
   ret=0
   case ${mode} in
@@ -99,6 +99,14 @@ validator() {
       svc_port=${value}
 
       if [[ ! ${svc_port} =~ ${regex} ]] || [[ ${svc_port} -gt 65535 ]]; then
+        ret=1
+      fi
+    ;;
+    'fqdn')
+      regex='(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\.)+[a-zA-Z]{2,63}$)'
+      fqdn=${value}
+
+      if ! echo ${fqdn} | grep -Pq ${regex}; then
         ret=1
       fi
   esac
@@ -247,6 +255,11 @@ gen_client_config() {
     return 1
   fi
 
+  if ! validator ipaddress ${server_public_ip} && ! validator fqdn ${server_public_ip}; then
+    echo -e "${RED}ERROR${NONE}: ${RED}${server_public_ip}${NONE} is not valid IP address nor FQDN!"
+    return 1
+  fi
+
   server_config_match=$(grep -l "^Address = ${client_wg_ip}" ${server_config})
   if [[ -n ${server_config_match} ]]; then
     echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} is used by server => ${BLUE}${server_config_match}${NONE}"
@@ -367,6 +380,11 @@ wg_sync() {
 
   if [[ ! -f ${server_config} ]]; then
     echo -e "${RED}ERROR${NONE}: Server config ${BLUE}${server_config}${NONE} does not exist, aborting sync command..."
+    exit 1
+  fi
+
+  if ! validator ipaddress ${server_public_ip} && ! validator fqdn ${server_public_ip}; then
+    echo -e "${RED}ERROR${NONE}: ${RED}${server_public_ip}${NONE} is not valid IP address nor FQDN!"
     exit 1
   fi
 
