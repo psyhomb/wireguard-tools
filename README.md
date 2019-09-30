@@ -17,12 +17,16 @@ Before start using this script I would suggest updating default options in [wgcg
 ```bash
 # Server name (wireguard interface name e.g. wg0 || wg1 || wg2)
 export WGCG_SERVER_NAME="wg0"
+
 # VPN (WG) IP private address
 export WGCG_SERVER_WG_IP="10.0.0.1"
+
 # Static server port
 export WGCG_SERVER_PORT="52001"
+
 # Server's public IP or FQDN
 export WGCG_SERVER_PUBLIC_IP="wg.example.com"
+
 # All configuration and key files will be stored in this directory
 export WGCG_WORKING_DIR="${HOME}/wireguard/${WGCG_SERVER_NAME}"
 ```
