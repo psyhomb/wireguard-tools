@@ -47,6 +47,7 @@ help() {
   echo -e "  ${GREEN}$(basename ${0})${NONE} options"
   echo
   echo -e "${BLUE}Options${NONE}:"
+  echo -e "  ${GREEN}-P${NONE}|${GREEN}--sysprep${NONE} filename.sh [server_public_ip]"
   echo -e "  ${GREEN}-s${NONE}|${GREEN}--add-server-config${NONE} [server_name] [server_wg_ip] [server_port]"
   echo -e "  ${GREEN}-c${NONE}|${GREEN}--add-client-config${NONE} client_name client_wg_ip [server_name] [server_port] [server_public_ip]"
   echo -e "  ${GREEN}-B${NONE}|${GREEN}--add-clients-batch${NONE} filename.csv"
@@ -112,6 +113,42 @@ validator() {
   esac
 
   return ${ret}
+}
+
+
+# Prepare system to run Wireguard
+wg_sysprep() {
+  local sysprep_module="${1}"
+  local server_public_ip="${2}"
+
+  local server_prepared="${WORKING_DIR}/.sysprepared"
+
+  if [[ -f ${server_prepared} ]]; then
+    echo -e "${YELLOW}WARNING${NONE}: System has already been prepared to run Wireguard!"
+    echo -ne "Are you sure you want to run it again? (${GREEN}yes${NONE}/${RED}no${NONE}): "
+    read answer
+
+    [[ ${answer} != "yes" ]] && exit 1
+  fi
+
+  if [[ ! -f ${sysprep_module} ]]; then
+    echo -e "${RED}ERROR${NONE}: Sysprep module ${RED}${sysprep_module}${NONE} could not be found!"
+    exit 1
+  fi
+
+  local sysprep_module_script="${sysprep_module##*/}"
+  cat ${sysprep_module} | ssh root@${server_public_ip} "
+    cat > /usr/local/bin/${sysprep_module_script} && \
+    chmod +x /usr/local/bin/${sysprep_module_script} && \
+    /usr/local/bin/${sysprep_module_script}
+  "
+  if [[ ${?} -ne 0 ]]; then
+    echo -e "${RED}ERROR${NONE}: Something went wrong, execution of sysprep module ${BLUE}${sysprep_module_script}${NONE} failed!"
+    exit 1
+  fi
+
+  touch ${server_prepared}
+  echo -e "${GREEN}INFO${NONE}: Sysprep module executed successfully, Wireguard server is now ready to receive configuration file!"
 }
 
 
@@ -239,7 +276,7 @@ gen_client_config() {
   fi
 
   if [[ ! -f ${server_generated} ]]; then
-    echo -e "${GREEN}INFO${NONE}: Server config and keys could not be found, please run script with ${GREEN}--server-config${NONE} option first"
+    echo -e "${GREEN}INFO${NONE}: Server config and keys could not be found, please run script with ${GREEN}--add-server-config${NONE} option first"
     exit 1
   fi
 
@@ -390,7 +427,7 @@ wg_sync() {
 
   ssh root@${server_public_ip} "which wg-quick &> /dev/null"
   if [[ ${?} -ne 0 ]]; then
-    echo -e "${YELLOW}WARNING${NONE}: It looks like ${GREEN}wireguard-tools${NONE} package isn't installed on the server, aborting..."
+    echo -e "${YELLOW}WARNING${NONE}: It looks like ${GREEN}wireguard-tools${NONE} package isn't installed, please run script with ${GREEN}--sysprep${NONE} option first"
     exit 1
   fi
 
@@ -417,6 +454,11 @@ wg_sync() {
 
 
 case ${1} in
+  '-P'|'--sysprep')
+    shift
+    # sysprep_module, server_public_ip
+    wg_sysprep ${1} ${2:-${SERVER_PUBLIC_IP}}
+  ;;
   '-s'|'--add-server-config')
     shift
     # server_name, server_wg_ip, server_port

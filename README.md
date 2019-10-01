@@ -46,6 +46,7 @@ Usage:
   wgcg.sh options
 
 Options:
+  -P|--sysprep filename.sh [server_public_ip]
   -s|--add-server-config [server_name] [server_wg_ip] [server_port]
   -c|--add-client-config client_name client_wg_ip [server_name] [server_port] [server_public_ip]
   -B|--add-clients-batch filename.csv
@@ -61,6 +62,19 @@ Current default options:
   WGCG_SERVER_PORT="52001"
   WGCG_SERVER_PUBLIC_IP="wg.example.com"
   WGCG_WORKING_DIR="/home/username/wireguard/wg0"
+```
+
+This module will do all required system preparations on the Wiregurad server (this is idempotent operation):
+
+- Install `wireguard` kernel module and tools
+- Load the module
+- Generate `wgfw.sh` script
+- Enable IP forwarding (routing)
+
+**Note:** You have to run it only once!
+
+```bash
+./wgcg.sh --sysprep modules/wgcg-install-wireguard.sh
 ```
 
 Generate server keys and config
