@@ -15,6 +15,8 @@ This script is created to ease manual process of Wireguard configuration and wil
 Before start using this script I would suggest updating default options in [wgcg.vars](./wgcg.vars) file, otherwise you will have to specify these options from the command line every time you run the script.  
 Practically the only variable you would have to modify is `WGCG_SERVER_PUBLIC_IP`.
 
+All following commands must be executed from the local system (SSH public key authentication on the server is required)!
+
 ```bash
 # Server name (wireguard interface name e.g. wg0 || wg1 || wg2)
 export WGCG_SERVER_NAME="wg0"
