@@ -5,17 +5,17 @@
 
 set -e
 
-echo "Installing Wireguard and required dependencies, please wait..."
+echo "Installing Wireguard and required dependencies on the server, please wait..."
 echo
 
 # Installing wireguard kernel module and required dependencies
 apt-get update && apt-get install -y wireguard
 
 # Allow module to be loaded at boot time
-echo wireguard > /etc/modules-load.d/wg.conf
+echo wireguard > /etc/modules-load.d/wgcg.conf
 
 # Load the module
-modprobe wireguard
+modprobe -v wireguard
 
 ### Generate wgfw.sh script - will be used for adding required firewall rules
 cat > /usr/local/bin/wgfw.sh <<EOF && chmod +x /usr/local/bin/wgfw.sh
@@ -50,6 +50,3 @@ cat > /etc/sysctl.d/10-wgcg.conf <<'EOF' && sysctl -p /etc/sysctl.d/10-wgcg.conf
 # Enable IP forwarding (routing) - WireGuard
 net.ipv4.ip_forward = 1
 EOF
-
-echo
-echo "Wireguard installed successfully!"
