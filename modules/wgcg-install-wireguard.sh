@@ -35,18 +35,20 @@ rules() {
 
 case \${1} in
   'add')
+    echo 1 > /proc/sys/net/ipv4/ip_forward
     rules -A
   ;;
   'del')
     rules -D
+    echo 0 > /proc/sys/net/ipv4/ip_forward
   ;;
   *)
     echo "Usage: \$(basename \${0}) add|del"
 esac
 EOF
 
-### Enable IP forwarding (routing)
-cat > /etc/sysctl.d/10-wgcg.conf <<'EOF' && sysctl -p /etc/sysctl.d/10-wgcg.conf
-# Enable IP forwarding (routing) - WireGuard
-net.ipv4.ip_forward = 1
-EOF
+### Enable permanent IP forwarding (routing)
+#cat > /etc/sysctl.d/10-wgcg.conf <<'EOF' && sysctl -p /etc/sysctl.d/10-wgcg.conf
+## Enable IP forwarding (routing) - WireGuard
+#net.ipv4.ip_forward = 1
+#EOF
