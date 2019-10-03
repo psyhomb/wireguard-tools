@@ -29,7 +29,6 @@ NONE="\033[0m"
 DEPS=(
   "wg"
   "qrencode"
-  "rsync"
 )
 
 # Check if all dependencies are installed
@@ -431,7 +430,7 @@ wg_sync() {
     exit 1
   fi
 
-  rsync -q --chmod 600 ${server_config} root@${server_public_ip}:/etc/wireguard/${server_name}.conf
+  cat ${server_config} | ssh root@${server_public_ip} "cat > /etc/wireguard/${server_name}.conf && chmod 600 /etc/wireguard/${server_name}.conf"
   if [[ ${?} -eq 0 ]]; then
     echo -e "${GREEN}INFO${NONE}: Server configuration ${BLUE}${server_config}${NONE} successfully copied over to the server ${BLUE}${server_public_ip}${NONE}"
     echo -ne "Do you want to restart ${GREEN}wg-quick${NONE} service? (${GREEN}yes${NONE}/${RED}no${NONE}): "
