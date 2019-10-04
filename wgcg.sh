@@ -3,19 +3,23 @@
 # Date: 2019/09/25
 # Description: Wireguard config generator
 
+# Import global variables from the file
+VARS_FILE="${HOME}/wireguard/wgcg/wgcg.vars"
+[[ -f ${VARS_FILE} ]] && source ${VARS_FILE}
+
 ### Global variables
 # Default options
 # Server name (wireguard interface name e.g. wg0 || wg1 || wg2)
-SERVER_NAME=${WGCG_SERVER_NAME:-"wg0"}
+SERVER_NAME=${WGCG_SERVER_NAME}
 # VPN (WG) IP private address
-SERVER_WG_IP=${WGCG_SERVER_WG_IP:-"10.0.0.1"}
+SERVER_WG_IP=${WGCG_SERVER_WG_IP}
 # Static server port
-SERVER_PORT=${WGCG_SERVER_PORT:-"52001"}
+SERVER_PORT=${WGCG_SERVER_PORT}
 # Server's public IP or FQDN
 # To discover server's public IP use: curl -sSL https://ifconfig.co
-SERVER_PUBLIC_IP=${WGCG_SERVER_PUBLIC_IP:-"wg.example.com"}
+SERVER_PUBLIC_IP=${WGCG_SERVER_PUBLIC_IP}
 # Working directory where all generated files will be stored
-WORKING_DIR=${WGCG_WORKING_DIR:-"${HOME}/wireguard"}
+WORKING_DIR=${WGCG_WORKING_DIR}
 
 
 # Text colors
@@ -40,20 +44,26 @@ for DEP in ${DEPS[@]}; do
 done
 [[ ${STAT} -eq 1 ]] && exit 1
 
+# All global variables are mandatory
+if [[ -z ${SERVER_NAME} ]] || [[ -z ${SERVER_WG_IP} ]] || [[ -z ${SERVER_PORT} ]] || [[ -z ${SERVER_PUBLIC_IP} ]] || [[ -z ${WORKING_DIR} ]]; then
+  echo -e "${RED}ERROR${NONE}: All global options are mandatory please modify ${GREEN}wgcg.vars${NONE} configuration file and copy it to the ${BLUE}${VARS_FILE%/*}/${NONE} directory!"
+  exit 1
+fi
+
 
 help() {
   echo -e "${BLUE}Usage${NONE}:"
   echo -e "  ${GREEN}$(basename ${0})${NONE} options"
   echo
   echo -e "${BLUE}Options${NONE}:"
-  echo -e "  ${GREEN}-P${NONE}|${GREEN}--sysprep${NONE} filename.sh [server_public_ip]"
-  echo -e "  ${GREEN}-s${NONE}|${GREEN}--add-server-config${NONE} [server_name] [server_wg_ip] [server_port]"
-  echo -e "  ${GREEN}-c${NONE}|${GREEN}--add-client-config${NONE} client_name client_wg_ip [server_name] [server_port] [server_public_ip]"
+  echo -e "  ${GREEN}-P${NONE}|${GREEN}--sysprep${NONE} filename.sh"
+  echo -e "  ${GREEN}-s${NONE}|${GREEN}--add-server-config${NONE}"
+  echo -e "  ${GREEN}-c${NONE}|${GREEN}--add-client-config${NONE} client_name client_wg_ip"
   echo -e "  ${GREEN}-B${NONE}|${GREEN}--add-clients-batch${NONE} filename.csv"
-  echo -e "  ${GREEN}-r${NONE}|${GREEN}--rm-client-config${NONE} client_name [server_name]"
+  echo -e "  ${GREEN}-r${NONE}|${GREEN}--rm-client-config${NONE} client_name"
   echo -e "  ${GREEN}-q${NONE}|${GREEN}--gen-qr-code${NONE} client_name"
   echo -e "  ${GREEN}-l${NONE}|${GREEN}--list-used-ips${NONE}"
-  echo -e "  ${GREEN}-S${NONE}|${GREEN}--sync${NONE} [server_name] [server_public_ip]"
+  echo -e "  ${GREEN}-S${NONE}|${GREEN}--sync${NONE}"
   echo -e "  ${GREEN}-h${NONE}|${GREEN}--help${NONE}"
   echo
   echo -e "${BLUE}Current default options${NONE}:"
@@ -456,17 +466,17 @@ case ${1} in
   '-P'|'--sysprep')
     shift
     # sysprep_module, server_public_ip
-    wg_sysprep ${1} ${2:-${SERVER_PUBLIC_IP}}
+    wg_sysprep ${1:-''} ${SERVER_PUBLIC_IP}
   ;;
   '-s'|'--add-server-config')
     shift
     # server_name, server_wg_ip, server_port
-    gen_server_config ${1:-${SERVER_NAME}} ${2:-${SERVER_WG_IP}} ${3:-${SERVER_PORT}}
+    gen_server_config ${SERVER_NAME} ${SERVER_WG_IP} ${SERVER_PORT}
   ;;
   '-c'|'--add-client-config')
     shift
     # client_name, client_wg_ip, server_name, server_port, server_public_ip
-    gen_client_config ${1:-''} ${2:-''} ${3:-${SERVER_NAME}} ${4:-${SERVER_PORT}} ${5:-${SERVER_PUBLIC_IP}}
+    gen_client_config ${1:-''} ${2:-''} ${SERVER_NAME} ${SERVER_PORT} ${SERVER_PUBLIC_IP}
     [[ ${?} -ne 0 ]] && exit 1
     # client_name
     gen_qr ${1}
@@ -474,7 +484,7 @@ case ${1} in
   '-r'|'--rm-client-config')
     shift
     # client_name, server_name
-    remove_client_config ${1:-''} ${2:-${SERVER_NAME}}
+    remove_client_config ${1:-''} ${SERVER_NAME}
   ;;
   '-B'|'--add-clients-batch')
     shift
@@ -492,7 +502,7 @@ case ${1} in
   '-S'|'--sync')
     shift
     # server_name, server_public_ip
-    wg_sync ${1:-${SERVER_NAME}} ${2:-${SERVER_PUBLIC_IP}}
+    wg_sync ${SERVER_NAME} ${SERVER_PUBLIC_IP}
   ;;
   *)
     help

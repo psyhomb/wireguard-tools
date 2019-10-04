@@ -12,32 +12,33 @@ This script is created to ease manual process of Wireguard configuration and wil
 
 ### Usage
 
-Before start using this script I would suggest updating default options in [wgcg.vars](./wgcg.vars) file, otherwise you will have to specify these options from the command line every time you run the script.  
+Before start using this script you will have to update [wgcg.vars](./wgcg.vars) configuration file.  
 Practically the only variable you would have to modify is `WGCG_SERVER_PUBLIC_IP`.
-
-All following commands must be executed from the local system (SSH public key authentication on the server is required)!
 
 ```bash
 # Server name (wireguard interface name e.g. wg0 || wg1 || wg2)
-export WGCG_SERVER_NAME="wg0"
+WGCG_SERVER_NAME="wg0"
 
 # VPN (WG) IP private address
-export WGCG_SERVER_WG_IP="10.0.0.1"
+WGCG_SERVER_WG_IP="10.0.0.1"
 
 # Static server port
-export WGCG_SERVER_PORT="52001"
+WGCG_SERVER_PORT="52001"
 
 # Server's public IP or FQDN
-export WGCG_SERVER_PUBLIC_IP="wg.example.com"
+WGCG_SERVER_PUBLIC_IP="wg.example.com"
 
 # All configuration and key files will be stored in this directory
-export WGCG_WORKING_DIR="${HOME}/wireguard/${WGCG_SERVER_NAME}"
+WGCG_WORKING_DIR="${HOME}/wireguard/${WGCG_SERVER_NAME}"
 ```
 
-Export variables defined in [wgcg.vars](./wgcg.vars) file
+All following commands must be executed from the local system!
+
+Copy [wgcg.vars](./wgcg.vars) configuration file to the `wgcg` directory:
 
 ```bash
-source wgcg.vars
+mkdir -p ${HOME}/wireguard/wgcg
+cp wgcg.vars ${HOME}/wireguard/wgcg/
 ```
 
 Print help and current default options
@@ -48,14 +49,14 @@ Usage:
   wgcg.sh options
 
 Options:
-  -P|--sysprep filename.sh [server_public_ip]
-  -s|--add-server-config [server_name] [server_wg_ip] [server_port]
-  -c|--add-client-config client_name client_wg_ip [server_name] [server_port] [server_public_ip]
+  -P|--sysprep filename.sh
+  -s|--add-server-config
+  -c|--add-client-config client_name client_wg_ip
   -B|--add-clients-batch filename.csv
-  -r|--rm-client-config client_name [server_name]
+  -r|--rm-client-config client_name
   -q|--gen-qr-code client_name
   -l|--list-used-ips
-  -S|--sync [server_name] [server_public_ip]
+  -S|--sync
   -h|--help
 
 Current default options:
