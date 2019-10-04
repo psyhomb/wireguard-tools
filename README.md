@@ -49,15 +49,15 @@ Usage:
   wgcg.sh options
 
 Options:
-  -P|--sysprep filename.sh
-  -s|--add-server-config
-  -c|--add-client-config client_name client_wg_ip
-  -B|--add-clients-batch filename.csv
-  -r|--rm-client-config client_name
-  -q|--gen-qr-code client_name
-  -l|--list-used-ips
-  -S|--sync
-  -h|--help
+  -P|--sysprep filename.sh                             Install Wiregurad kernel module, required tools and scripts (will establish SSH connection with server)
+  -s|--add-server-config                               Generate server configuration
+  -c|--add-client-config client_name client_wg_ip      Generate client configuration
+  -B|--add-clients-batch filename.csv                  Generate configuration for multiple clients in batch mode
+  -r|--rm-client-config client_name                    Remove client configuration
+  -q|--gen-qr-code client_name                         Generate QR code from client configuration file
+  -l|--list-used-ips                                   List all client's IPs that are currently in use
+  -S|--sync                                            Synchronize server configuration (will establish SSH connection with server)
+  -h|--help                                            Show this help
 
 Current default options:
   WGCG_SERVER_NAME="wg0"
