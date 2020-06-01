@@ -9,6 +9,7 @@ echo "Installing Wireguard and required dependencies on the server, please wait.
 echo
 
 # Installing wireguard kernel module and required dependencies
+add-apt-repository ppa:wireguard/wireguard
 apt-get update && apt-get install -y wireguard
 
 # Allow module to be loaded at boot time
