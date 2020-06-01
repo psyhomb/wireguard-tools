@@ -28,6 +28,9 @@ WGCG_SERVER_PORT="52001"
 # Server's public IP or FQDN
 WGCG_SERVER_PUBLIC_IP="wg.example.com"
 
+# Server SSH port
+WGCG_SERVER_SSH_PORT="22"
+
 # All configuration and key files will be stored in this directory
 WGCG_WORKING_DIR="${HOME}/wireguard/${WGCG_SERVER_NAME}"
 ```
@@ -64,6 +67,7 @@ Current default options:
   WGCG_SERVER_WG_IP="10.0.0.1"
   WGCG_SERVER_PORT="52001"
   WGCG_SERVER_PUBLIC_IP="wg.example.com"
+  WGCG_SERVER_SSH_PORT="22"
   WGCG_WORKING_DIR="/home/username/wireguard/wg0"
 ```
 
@@ -115,7 +119,7 @@ Remove client config, PKI key pairs and update server config (remove Peer block)
 ./wgcg.sh -r foo
 ```
 
-Copy over updated server configuration to the server
+Copy updated server configuration file to server
 
 ```bash
 ./wgcg.sh --sync
