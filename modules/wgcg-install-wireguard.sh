@@ -9,12 +9,15 @@ echo "Installing Wireguard and required dependencies on the server, please wait.
 echo
 
 # Installing wireguard kernel module and required dependencies
-apt-get update && apt-get install -y wireguard
+add-apt-repository ppa:wireguard/wireguard
+apt-get update && apt-get install -y linux-headers-$(uname -r) wireguard
 
 # Allow module to be loaded at boot time
 echo wireguard > /etc/modules-load.d/wgcg.conf
 
 # Load the module
+echo -e "\nLoading module..."
+echo -e "NOTE: If error encountered please try upgrading the Linux kernel to the latest version available and reboot\n"
 modprobe -v wireguard
 
 ### Generate wgfw.sh script - will be used for adding required firewall rules

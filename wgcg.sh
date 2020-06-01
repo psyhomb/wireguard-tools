@@ -18,6 +18,8 @@ SERVER_PORT=${WGCG_SERVER_PORT}
 # Server's public IP or FQDN
 # To discover server's public IP use: curl -sSL https://ifconfig.co
 SERVER_PUBLIC_IP=${WGCG_SERVER_PUBLIC_IP}
+# Server SSH port (default: 22)
+SERVER_SSH_PORT=${WGCG_SERVER_SSH_PORT}
 # Working directory where all generated files will be stored
 WORKING_DIR=${WGCG_WORKING_DIR}
 
@@ -71,6 +73,7 @@ help() {
   echo -e "  WGCG_SERVER_WG_IP=${GREEN}\"${SERVER_WG_IP}\"${NONE}"
   echo -e "  WGCG_SERVER_PORT=${GREEN}\"${SERVER_PORT}\"${NONE}"
   echo -e "  WGCG_SERVER_PUBLIC_IP=${GREEN}\"${SERVER_PUBLIC_IP}\"${NONE}"
+  echo -e "  WGCG_SERVER_SSH_PORT=${GREEN}\"${SERVER_SSH_PORT}\"${NONE}"
   echo -e "  WGCG_WORKING_DIR=${GREEN}\"${WORKING_DIR}\"${NONE}"
 }
 
@@ -129,6 +132,7 @@ validator() {
 wg_sysprep() {
   local sysprep_module="${1}"
   local server_public_ip="${2}"
+  local server_ssh_port="${3:-22}"
 
   local server_prepared="${WORKING_DIR}/.sysprepared"
 
@@ -146,7 +150,7 @@ wg_sysprep() {
   fi
 
   local sysprep_module_script="${sysprep_module##*/}"
-  cat ${sysprep_module} | ssh root@${server_public_ip} "
+  cat ${sysprep_module} | ssh -p ${server_ssh_port} root@${server_public_ip} "
     cat > /usr/local/bin/${sysprep_module_script} && \
     chmod +x /usr/local/bin/${sysprep_module_script} && \
     /usr/local/bin/${sysprep_module_script}
@@ -421,6 +425,7 @@ wg_list_used_ips() {
 wg_sync() {
   local server_name="${1}"
   local server_public_ip="${2}"
+  local server_ssh_port="${3:-22}"
 
   local server_config="${WORKING_DIR}/server-${server_name}.conf"
 
@@ -434,20 +439,20 @@ wg_sync() {
     exit 1
   fi
 
-  ssh root@${server_public_ip} "which wg-quick &> /dev/null"
+  ssh -p ${server_ssh_port} root@${server_public_ip} "which wg-quick &> /dev/null"
   if [[ ${?} -ne 0 ]]; then
     echo -e "${YELLOW}WARNING${NONE}: It looks like ${GREEN}wireguard-tools${NONE} package isn't installed, please run script with ${GREEN}--sysprep${NONE} option first"
     exit 1
   fi
 
-  cat ${server_config} | ssh root@${server_public_ip} "cat > /etc/wireguard/${server_name}.conf && chmod 600 /etc/wireguard/${server_name}.conf"
+  cat ${server_config} | ssh -p ${server_ssh_port} root@${server_public_ip} "cat > /etc/wireguard/${server_name}.conf && chmod 600 /etc/wireguard/${server_name}.conf"
   if [[ ${?} -eq 0 ]]; then
     echo -e "${GREEN}INFO${NONE}: Server configuration ${BLUE}${server_config}${NONE} successfully copied over to the server ${BLUE}${server_public_ip}${NONE}"
     echo -ne "Do you want to restart ${GREEN}wg-quick${NONE} service? (${GREEN}yes${NONE}/${RED}no${NONE}): "
     read answer
 
     if [[ ${answer} == "yes" ]]; then
-      ssh root@${server_public_ip} "
+      ssh -p ${server_ssh_port} root@${server_public_ip} "
         if ! systemctl is-enabled wg-quick@${server_name}.service &> /dev/null; then
           systemctl enable --now wg-quick@${server_name}.service &> /dev/null
           exit 0
@@ -465,8 +470,8 @@ wg_sync() {
 case ${1} in
   '-P'|'--sysprep')
     shift
-    # sysprep_module, server_public_ip
-    wg_sysprep ${1:-''} ${SERVER_PUBLIC_IP}
+    # sysprep_module, server_public_ip, server_ssh_port
+    wg_sysprep ${1:-''} ${SERVER_PUBLIC_IP} ${SERVER_SSH_PORT}
   ;;
   '-s'|'--add-server-config')
     shift
@@ -501,8 +506,8 @@ case ${1} in
   ;;
   '-S'|'--sync')
     shift
-    # server_name, server_public_ip
-    wg_sync ${SERVER_NAME} ${SERVER_PUBLIC_IP}
+    # server_name, server_public_ip, server_ssh_port
+    wg_sync ${SERVER_NAME} ${SERVER_PUBLIC_IP} ${SERVER_SSH_PORT}
   ;;
   *)
     help
