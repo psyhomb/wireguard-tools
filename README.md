@@ -13,7 +13,7 @@ This script is created to ease manual process of Wireguard configuration and wil
 ### Usage
 
 Before start using this script you will have to update [wgcg.vars](./wgcg.vars) configuration file.  
-Practically the only variable you would have to modify is `WGCG_SERVER_PUBLIC_IP`.
+For most use cases the only variable you would have to modify is `WGCG_SERVER_PUBLIC_IP`.
 
 ```bash
 # Server name (wireguard interface name e.g. wg0 || wg1 || wg2)
@@ -28,8 +28,14 @@ WGCG_SERVER_PORT="52001"
 # Server's public IP or FQDN
 WGCG_SERVER_PUBLIC_IP="wg.example.com"
 
-# Server SSH port
+# Server SSH port (optional)
 WGCG_SERVER_SSH_PORT="22"
+
+# Space separated list of DNS IPs (default: 1.1.1.1 1.0.0.1) (optional)
+WGCG_CLIENT_DNS_IPS="1.1.1.1 1.0.0.1"
+
+# Space separated list of subnets (with CIDR) required for split-tunneling (default: 0.0.0.0/0) (optional)
+WGCG_CLIENT_ALLOWED_IPS="0.0.0.0/0"
 
 # All configuration and key files will be stored in this directory
 WGCG_WORKING_DIR="${HOME}/wireguard/${WGCG_SERVER_NAME}"
@@ -68,6 +74,8 @@ Current default options:
   WGCG_SERVER_PORT="52001"
   WGCG_SERVER_PUBLIC_IP="wg.example.com"
   WGCG_SERVER_SSH_PORT="22"
+  WGCG_CLIENT_DNS_IPS="1.1.1.1 1.0.0.1"
+  WGCG_CLIENT_ALLOWED_IPS="0.0.0.0/0"
   WGCG_WORKING_DIR="/home/username/wireguard/wg0"
 ```
 
