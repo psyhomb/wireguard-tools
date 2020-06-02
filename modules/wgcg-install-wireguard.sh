@@ -11,6 +11,7 @@ echo
 # Installing wireguard kernel module and required dependencies
 add-apt-repository ppa:wireguard/wireguard
 apt-get update && apt-get install -y linux-headers-$(uname -r) wireguard
+mkdir -p /etc/wireguard
 
 # Allow module to be loaded at boot time
 echo wireguard > /etc/modules-load.d/wgcg.conf

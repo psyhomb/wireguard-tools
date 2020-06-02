@@ -20,6 +20,10 @@ SERVER_PORT=${WGCG_SERVER_PORT}
 SERVER_PUBLIC_IP=${WGCG_SERVER_PUBLIC_IP}
 # Server SSH port (default: 22)
 SERVER_SSH_PORT=${WGCG_SERVER_SSH_PORT}
+# Space separated list of DNS IPs (default: 1.1.1.1 1.0.0.1)
+CLIENT_DNS_IPS=${WGCG_CLIENT_DNS_IPS}
+# Space separated list of subnets (with CIDR) required for split-tunneling (default: 0.0.0.0/0)
+CLIENT_ALLOWED_IPS=${WGCG_CLIENT_ALLOWED_IPS}
 # Working directory where all generated files will be stored
 WORKING_DIR=${WGCG_WORKING_DIR}
 
@@ -48,7 +52,7 @@ done
 
 # All global variables are mandatory
 if [[ -z ${SERVER_NAME} ]] || [[ -z ${SERVER_WG_IP} ]] || [[ -z ${SERVER_PORT} ]] || [[ -z ${SERVER_PUBLIC_IP} ]] || [[ -z ${WORKING_DIR} ]]; then
-  echo -e "${RED}ERROR${NONE}: All global options are mandatory please modify ${GREEN}wgcg.vars${NONE} configuration file and copy it to the ${BLUE}${VARS_FILE%/*}/${NONE} directory!"
+  echo -e "${RED}ERROR${NONE}: Missing mandatory variables, please modify ${GREEN}wgcg.vars${NONE} configuration file and copy it to the ${BLUE}${VARS_FILE%/*}/${NONE} directory!"
   exit 1
 fi
 
@@ -73,7 +77,9 @@ help() {
   echo -e "  WGCG_SERVER_WG_IP=${GREEN}\"${SERVER_WG_IP}\"${NONE}"
   echo -e "  WGCG_SERVER_PORT=${GREEN}\"${SERVER_PORT}\"${NONE}"
   echo -e "  WGCG_SERVER_PUBLIC_IP=${GREEN}\"${SERVER_PUBLIC_IP}\"${NONE}"
-  echo -e "  WGCG_SERVER_SSH_PORT=${GREEN}\"${SERVER_SSH_PORT}\"${NONE}"
+  [[ -n ${SERVER_SSH_PORT} ]] && echo -e "  WGCG_SERVER_SSH_PORT=${GREEN}\"${SERVER_SSH_PORT}\"${NONE}"
+  [[ -n ${CLIENT_DNS_IPS} ]] && echo -e "  WGCG_CLIENT_DNS_IPS=${GREEN}\"${CLIENT_DNS_IPS}\"${NONE}"
+  [[ -n ${CLIENT_ALLOWED_IPS} ]] && echo -e "  WGCG_CLIENT_ALLOWED_IPS=${GREEN}\"${CLIENT_ALLOWED_IPS}\"${NONE}"
   echo -e "  WGCG_WORKING_DIR=${GREEN}\"${WORKING_DIR}\"${NONE}"
 }
 
@@ -275,6 +281,9 @@ gen_client_config() {
   local server_public_ip="${5}"
   local server_wg_ip client_config_match server_config_match
 
+  local client_dns_ips="${6:-1.1.1.1 1.0.0.1}"
+  local client_allowed_ips="${7:-0.0.0.0/0}"
+
   local preshared_key="${WORKING_DIR}/preshared.key"
   local client_private_key="${WORKING_DIR}/client-${client_name}-private.key"
   local client_public_key="${WORKING_DIR}/client-${client_name}-public.key"
@@ -342,18 +351,26 @@ gen_client_config() {
     fi
   fi
 
+  for ip in ${client_dns_ips} ${client_allowed_ips}; do
+    validator ipaddress ${ip%/*}
+    if [[ ${?} -ne 0 ]]; then
+      echo -e "${RED}ERROR${NONE}: ${RED}${ip%/*}${NONE} is not valid IP address!"
+      return 1
+    fi
+  done
+
   gen_keys client-${client_name}
 
   cat > ${client_config} <<EOF && chmod 600 ${client_config}
 [Interface]
 Address = ${client_wg_ip}/24
 PrivateKey = $(head -1 ${client_private_key})
-DNS = 1.1.1.1, 1.0.0.1
+DNS = $(echo ${client_dns_ips} | sed 's/ \+/, /g')
 
 [Peer]
 PublicKey = $(head -1 ${server_public_key})
 PresharedKey = $(head -1 ${preshared_key})
-AllowedIPs = 0.0.0.0/0
+AllowedIPs = $(echo ${client_allowed_ips} | sed 's/ \+/, /g')
 Endpoint = ${server_public_ip}:${server_port}
 PersistentKeepalive = 25
 EOF
@@ -400,7 +417,7 @@ gen_client_config_batch() {
 
   SKIP_ANSWER=true
   while IFS=',' read client_name client_wg_ip; do
-    gen_client_config ${client_name} ${client_wg_ip} ${SERVER_NAME} ${SERVER_PORT} ${SERVER_PUBLIC_IP}
+    gen_client_config ${client_name} ${client_wg_ip} ${SERVER_NAME} ${SERVER_PORT} ${SERVER_PUBLIC_IP} "${CLIENT_DNS_IPS}" "${CLIENT_ALLOWED_IPS}"
     [[ ${?} -ne 0 ]] && continue
     gen_qr ${client_name}
   done < <(egrep -v '^(#|$)' ${client_batch_csv_file})
@@ -481,7 +498,7 @@ case ${1} in
   '-c'|'--add-client-config')
     shift
     # client_name, client_wg_ip, server_name, server_port, server_public_ip
-    gen_client_config ${1:-''} ${2:-''} ${SERVER_NAME} ${SERVER_PORT} ${SERVER_PUBLIC_IP}
+    gen_client_config ${1:-''} ${2:-''} ${SERVER_NAME} ${SERVER_PORT} ${SERVER_PUBLIC_IP} "${CLIENT_DNS_IPS}" "${CLIENT_ALLOWED_IPS}"
     [[ ${?} -ne 0 ]] && exit 1
     # client_name
     gen_qr ${1}
