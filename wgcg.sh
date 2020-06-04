@@ -3,9 +3,15 @@
 # Date: 2019/09/25
 # Description: Wireguard config generator
 
-# Import global variables from the file
-VARS_FILE="${HOME}/wireguard/wgcg/wgcg.vars"
-[[ -f ${VARS_FILE} ]] && source ${VARS_FILE}
+### Import global variables from configuration file
+CONFIG_FILE="${HOME}/wireguard/wgcg/wgcg.conf"
+for CF in "${WGCG_CONFIG_FILE}" "${CONFIG_FILE}"; do
+  if [[ -f "${CF}" ]]; then
+    CONFIG_FILE="${CF}"
+    source "${CONFIG_FILE}"
+    break
+  fi
+done
 
 ### Global variables
 # Default options
@@ -31,15 +37,14 @@ CLIENT_ALLOWED_IPS=${WGCG_CLIENT_ALLOWED_IPS}
 # Working directory where all generated files will be stored
 WORKING_DIR=${WGCG_WORKING_DIR}
 
-
-# Text colors
+### Text colors
 RED="\033[31m"
 GREEN="\033[32m"
 YELLOW="\033[33m"
 BLUE="\033[34m"
 NONE="\033[0m"
 
-# Dependencies required by the script
+### Dependencies required by the script
 DEPS=(
   "wg"
   "qrencode"
@@ -54,13 +59,9 @@ for DEP in ${DEPS[@]}; do
 done
 [[ ${STAT} -eq 1 ]] && exit 1
 
-# All global variables are mandatory
-if [[ -z ${SERVER_NAME} ]] || [[ -z ${SERVER_WG_IP} ]] || [[ -z ${SERVER_PORT} ]] || [[ -z ${SERVER_PUBLIC_IP} ]] || [[ -z ${WORKING_DIR} ]]; then
-  echo -e "${RED}ERROR${NONE}: Missing mandatory variables, please modify ${GREEN}wgcg.vars${NONE} configuration file and copy it to the ${BLUE}${VARS_FILE%/*}/${NONE} directory!"
-  exit 1
-fi
 
-
+### Functions
+# Show help
 help() {
   echo -e "${BLUE}Usage${NONE}:"
   echo -e "  ${GREEN}$(basename ${0})${NONE} options"
@@ -87,6 +88,17 @@ help() {
   [[ -n ${CLIENT_ALLOWED_IPS} ]] && echo -e "  WGCG_CLIENT_ALLOWED_IPS=${GREEN}\"${CLIENT_ALLOWED_IPS}\"${NONE}"
   echo -e "  WGCG_WORKING_DIR=${GREEN}\"${WORKING_DIR}\"${NONE}"
 }
+
+
+# Check mandatory global variables
+check_variables() {
+  if [[ -z ${SERVER_NAME} ]] || [[ -z ${SERVER_WG_IP} ]] || [[ -z ${SERVER_PORT} ]] || [[ -z ${SERVER_PUBLIC_IP} ]] || [[ -z ${WORKING_DIR} ]]; then
+    echo -e "${RED}ERROR${NONE}: Missing mandatory variables, please check and modify ${GREEN}${CONFIG_FILE}${NONE} configuration file accordingly!"
+    return 1
+  fi
+}
+
+check_variables || exit ${?}
 
 
 # Validator for IP addresses and service ports
