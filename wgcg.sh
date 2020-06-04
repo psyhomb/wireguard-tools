@@ -281,7 +281,7 @@ gen_server_config() {
 
   cat > ${server_config} <<EOF && chmod 600 ${server_config}
 [Interface]
-Address = ${server_wg_ip}/24
+Address = ${server_wg_ip}/22
 ListenPort = ${server_port}
 PrivateKey = $(head -1 ${server_private_key})
 PostUp = /usr/local/bin/wgfw.sh add
@@ -347,11 +347,11 @@ gen_client_config() {
     return 1
   fi
 
-  server_wg_ip=$(awk -F'[ /]' '/^Address =/ {print $(NF-1)}' ${server_config})
-  if [[ ${server_wg_ip%.*} != ${client_wg_ip%.*} ]]; then
-    echo -e "${RED}ERROR${NONE}: Client private IP address ${RED}${client_wg_ip}${NONE} does not belong to the range: ${GREEN}${server_wg_ip%.*}.1${NONE} - ${GREEN}${server_wg_ip%.*}.254${NONE}"
-    return 1
-  fi
+  # server_wg_ip=$(awk -F'[ /]' '/^Address =/ {print $(NF-1)}' ${server_config})
+  # if [[ ${server_wg_ip%.*} != ${client_wg_ip%.*} ]]; then
+  #   echo -e "${RED}ERROR${NONE}: Client private IP address ${RED}${client_wg_ip}${NONE} does not belong to the range: ${GREEN}${server_wg_ip%.*}.1${NONE} - ${GREEN}${server_wg_ip%.*}.254${NONE}"
+  #   return 1
+  # fi
 
   if [[ -f ${client_private_key} ]]; then
     if [[ ${SKIP_ANSWER} == false ]]; then
@@ -385,7 +385,7 @@ gen_client_config() {
 
   cat > ${client_config} <<EOF && chmod 600 ${client_config}
 [Interface]
-Address = ${client_wg_ip}/24
+Address = ${client_wg_ip}/22
 PrivateKey = $(head -1 ${client_private_key})
 DNS = $(echo ${client_dns_ips} | sed 's/ \+/, /g')
 
