@@ -12,8 +12,8 @@ This script is created to ease manual process of Wireguard configuration and wil
 
 ### Usage
 
-Before start using this script you will have to update [wgcg.vars](./wgcg.vars) configuration file.  
-For most use cases the only variable you would have to modify is `WGCG_SERVER_PUBLIC_IP`.
+Before running the script we'll have to update [wgcg.conf](./wgcg.conf) configuration file.  
+For most use cases the only variable we'd have to modify is `WGCG_SERVER_PUBLIC_IP`.
 
 ```bash
 # Server name (wireguard interface name e.g. wg0 || wg1 || wg2)
@@ -48,11 +48,17 @@ WGCG_WORKING_DIR="${HOME}/wireguard/${WGCG_SERVER_NAME}"
 
 All following commands must be executed from the local system!
 
-Copy [wgcg.vars](./wgcg.vars) configuration file to the `wgcg` directory:
+Copy [wgcg.conf](./wgcg.conf) configuration file to the `wgcg` directory:
 
 ```bash
 mkdir -p ${HOME}/wireguard/wgcg
-cp wgcg.vars ${HOME}/wireguard/wgcg/
+cp wgcg.conf ${HOME}/wireguard/wgcg/
+```
+
+It is also possible to specify custom configuration file by passing `${WGCG_CONFIG_FILE}` environment variable:
+
+```bash
+WGCG_CONFIG_FILE=./wgcg.conf ./wgcg.sh
 ```
 
 Print help and current default options
@@ -84,7 +90,7 @@ Current default options:
   WGCG_WORKING_DIR="/home/username/wireguard/wg0"
 ```
 
-This module will do all required system preparations on the Wiregurad server (this is idempotent operation):
+[wgcg-install-wireguard.sh](./modules/wgcg-install-wireguard.sh) module will do all required system preparations on the Wiregurad server (running the module is idempotent operation):
 
 - Install `wireguard` kernel module and tools
 - Load the module
