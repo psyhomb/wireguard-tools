@@ -67,15 +67,17 @@ help() {
   echo -e "  ${GREEN}$(basename ${0})${NONE} options"
   echo
   echo -e "${BLUE}Options${NONE}:"
-  echo -e "  ${GREEN}-P${NONE}|${GREEN}--sysprep${NONE} filename.sh                             Install Wiregurad kernel module, required tools and scripts (will establish SSH connection with server)"
-  echo -e "  ${GREEN}-s${NONE}|${GREEN}--add-server-config${NONE}                               Generate server configuration"
-  echo -e "  ${GREEN}-c${NONE}|${GREEN}--add-client-config${NONE} client_name client_wg_ip      Generate client configuration"
-  echo -e "  ${GREEN}-B${NONE}|${GREEN}--add-clients-batch${NONE} filename.csv                  Generate configuration for multiple clients in batch mode"
-  echo -e "  ${GREEN}-r${NONE}|${GREEN}--rm-client-config${NONE} client_name                    Remove client configuration"
-  echo -e "  ${GREEN}-q${NONE}|${GREEN}--gen-qr-code${NONE} client_name                         Generate QR code from client configuration file"
-  echo -e "  ${GREEN}-l${NONE}|${GREEN}--list-used-ips${NONE}                                   List all client's IPs that are currently in use"
-  echo -e "  ${GREEN}-S${NONE}|${GREEN}--sync${NONE}                                            Synchronize server configuration (will establish SSH connection with server)"
-  echo -e "  ${GREEN}-h${NONE}|${GREEN}--help${NONE}                                            Show this help"
+  echo -e "  ${GREEN}-P${NONE}|${GREEN}--sysprep${NONE} filename.sh                                  Install Wiregurad kernel module, required tools and scripts (will establish SSH connection with server)"
+  echo -e "  ${GREEN}-s${NONE}|${GREEN}--add-server-config${NONE}                                    Generate server configuration"
+  echo -e "  ${GREEN}-c${NONE}|${GREEN}--add-client-config${NONE} client_name client_wg_ip           Generate client configuration"
+  echo -e "  ${GREEN}-B${NONE}|${GREEN}--add-clients-batch${NONE} filename.csv[:rewrite|:norewrite]  Generate configuration for multiple clients in batch mode"
+  echo -e "                                                            Supported action modes are 'rewrite' or 'norewrite' (default)"
+  echo -e "                                                            'rewrite' action mean regenerate ALL, 'norewrite' mean generate only configs and keys for new clients"
+  echo -e "  ${GREEN}-r${NONE}|${GREEN}--rm-client-config${NONE} client_name                         Remove client configuration"
+  echo -e "  ${GREEN}-q${NONE}|${GREEN}--gen-qr-code${NONE} client_name                              Generate QR code from client configuration file"
+  echo -e "  ${GREEN}-l${NONE}|${GREEN}--list-used-ips${NONE}                                        List all client's IPs that are currently in use"
+  echo -e "  ${GREEN}-S${NONE}|${GREEN}--sync${NONE}                                                 Synchronize server configuration (will establish SSH connection with server)"
+  echo -e "  ${GREEN}-h${NONE}|${GREEN}--help${NONE}                                                 Show this help"
   echo
   echo -e "${BLUE}Current default options${NONE}:"
   echo -e "  WGCG_SERVER_NAME=${GREEN}\"${SERVER_NAME}\"${NONE}"
@@ -356,15 +358,22 @@ gen_client_config() {
   # fi
 
   if [[ -f ${client_private_key} ]]; then
+    # Condition will be skipped if function called from the gen_client_config_batch() function
     if [[ ${SKIP_ANSWER} == false ]]; then
-      echo -e "${YELLOW}WARNING${NONE}: This is destructive operation!"
+      echo -e "${YELLOW}WARNING${NONE}: All files for this client will be regenerated!"
       echo -ne "Config and key files for client ${GREEN}${client_name}${NONE} are already generated, do you want to overwrite it? (${GREEN}yes${NONE}/${RED}no${NONE}): "
       read answer
 
-      [[ ${answer} != "yes" ]] && return 1
-    fi
+      [[ ${answer} == "yes" ]] || return 1
 
-    remove_client_config ${client_name} ${server_name}
+      remove_client_config ${client_name} ${server_name}
+    else
+      if [[ ${BATCH_REWRITE} == true ]]; then
+        remove_client_config ${client_name} ${server_name}
+      else
+        return 1
+      fi
+    fi
   else
     if find ${WORKING_DIR} -maxdepth 1 | egrep -q "client-.*\.conf$"; then
       client_config_match=$(grep -l "^Address = ${client_wg_ip}" ${WORKING_DIR}/client-*.conf)
@@ -422,9 +431,11 @@ gen_qr() {
 
 
 # Generate client configs in batch
+BATCH_REWRITE=false
 gen_client_config_batch() {
-  local client_batch_csv_file="${1}"
-  local client_name client_wg_ip
+  local client_batch_csv_file="${1%%:*}"
+  local client_batch_csv_file_action="${1##*:}"
+  local client_name client_wg_ip client_wg_gen_action
 
   if [[ ! -f ${client_batch_csv_file} ]]; then
     echo -e "${RED}ERROR${NONE}: Client batch file ${BLUE}${client_batch_csv_file}${NONE} does not exist, please create one first!"
@@ -432,7 +443,23 @@ gen_client_config_batch() {
   fi
 
   SKIP_ANSWER=true
-  while IFS=',' read client_name client_wg_ip; do
+  while IFS=',' read client_name client_wg_ip client_wg_gen_action; do
+    BATCH_REWRITE=false
+    case ${client_batch_csv_file_action} in
+      "rewrite")
+        BATCH_REWRITE=true
+      ;;
+    esac
+
+    case ${client_wg_gen_action} in
+      "rewrite")
+        BATCH_REWRITE=true
+      ;;
+      "norewrite")
+        BATCH_REWRITE=false
+      ;;
+    esac
+
     gen_client_config ${client_name} ${client_wg_ip} ${SERVER_NAME} ${SERVER_PORT} ${SERVER_PUBLIC_IP} "${CLIENT_DNS_IPS}" "${CLIENT_ALLOWED_IPS}"
     [[ ${?} -ne 0 ]] && continue
     gen_qr ${client_name}

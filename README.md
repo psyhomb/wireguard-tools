@@ -54,22 +54,20 @@ WGCG_CLIENT_ALLOWED_IPS="0.0.0.0/0"
 WGCG_WORKING_DIR="${HOME}/wireguard/${WGCG_SERVER_NAME}"
 ```
 
-All following commands must be executed from the local system!
-
-Copy [wgcg.conf](./wgcg.conf) configuration file to the `wgcg` directory:
+Copy [wgcg.conf](./wgcg.conf) configuration file to the `wgcg` directory.
 
 ```bash
 mkdir -p ${HOME}/wireguard/wgcg
 cp wgcg.conf ${HOME}/wireguard/wgcg/
 ```
 
-It is also possible to specify custom configuration file by passing `${WGCG_CONFIG_FILE}` environment variable:
+It is also possible to specify custom configuration file by passing `${WGCG_CONFIG_FILE}` environment variable.
 
 ```bash
 WGCG_CONFIG_FILE=./wgcg.conf ./wgcg.sh
 ```
 
-Print help and current default options
+Print help and current default options.
 
 ```plain
 # ./wgcg.sh -h
@@ -77,15 +75,17 @@ Usage:
   wgcg.sh options
 
 Options:
-  -P|--sysprep filename.sh                             Install Wiregurad kernel module, required tools and scripts (will establish SSH connection with server)
-  -s|--add-server-config                               Generate server configuration
-  -c|--add-client-config client_name client_wg_ip      Generate client configuration
-  -B|--add-clients-batch filename.csv                  Generate configuration for multiple clients in batch mode
-  -r|--rm-client-config client_name                    Remove client configuration
-  -q|--gen-qr-code client_name                         Generate QR code from client configuration file
-  -l|--list-used-ips                                   List all client's IPs that are currently in use
-  -S|--sync                                            Synchronize server configuration (will establish SSH connection with server)
-  -h|--help                                            Show this help
+  -P|--sysprep filename.sh                                  Install Wiregurad kernel module, required tools and scripts (will establish SSH connection with server)
+  -s|--add-server-config                                    Generate server configuration
+  -c|--add-client-config client_name client_wg_ip           Generate client configuration
+  -B|--add-clients-batch filename.csv[:rewrite|:norewrite]  Generate configuration for multiple clients in batch mode
+                                                            Supported action modes are 'rewrite' or 'norewrite' (default)
+                                                            'rewrite' action mean regenerate ALL, 'norewrite' mean generate only configs and keys for new clients
+  -r|--rm-client-config client_name                         Remove client configuration
+  -q|--gen-qr-code client_name                              Generate QR code from client configuration file
+  -l|--list-used-ips                                        List all client's IPs that are currently in use
+  -S|--sync                                                 Synchronize server configuration (will establish SSH connection with server)
+  -h|--help                                                 Show this help
 
 Current default options:
   WGCG_SERVER_NAME="wg0"
@@ -111,7 +111,7 @@ Current default options:
 ./wgcg.sh --sysprep modules/wgcg-install-wireguard.sh
 ```
 
-Generate server keys and config
+Generate server keys and config.
 
 ```bash
 ./wgcg.sh -s
@@ -123,7 +123,7 @@ Generate client config, PKI key pairs and update server config (add new Peer blo
 ./wgcg.sh -c foo 10.0.0.2
 ```
 
-or if you want to generate multiple client configs, create `client-configs.csv` file
+or to generate multiple client configs at once, create `client-configs.csv` file
 
 ```bash
 cat > client-configs.csv <<'EOF'
@@ -132,21 +132,41 @@ bar,10.0.0.3
 EOF
 ```
 
-and run
+and run.
 
-**WARNING**: In batch mode if client configuration and key files exist all will be regenerated non-interactively
+**WARNING**: In batch mode if client configuration and key files exist all will be regenerated non-interactively.
 
 ```bash
 ./wgcg.sh -B client-configs.csv
 ```
 
-Remove client config, PKI key pairs and update server config (remove Peer block)
+By default `-B` will only generate client config and key files for newly added clients, if you plan to regenerate config and key files for ALL clients that are specified in the csv file,
+you'll have to use `rewrite` action mode, globally or per client line, in case both are specified last one has precedence.
+
+Global `rewrite` action mode
+
+```bash
+./wgcg.sh -B client-configs.csv:rewrite
+```
+
+or per client line.
+
+**Note:** It is also possible to protect individual client from regenerating config and key files by specifying `norewrite` action.
+
+```bash
+cat > client-configs.csv <<'EOF'
+foo,10.0.0.2,rewrite
+bar,10.0.0.3,norewrite
+EOF
+```
+
+Remove client config, PKI key pairs and update server config (remove Peer block).
 
 ```bash
 ./wgcg.sh -r foo
 ```
 
-Copy updated server configuration file to server
+Copy updated server configuration file to server.
 
 ```bash
 ./wgcg.sh --sync
