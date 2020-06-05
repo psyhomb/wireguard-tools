@@ -485,7 +485,7 @@ wg_list_used_ips() {
 wg_sync() {
   local server_name="${1}"
   local server_ssh_ip="${2}"
-  local server_ssh_port="${3}"
+  local server_ssh_port="${3:-22}"
 
   local server_config="${WORKING_DIR}/server-${server_name}.conf"
 
