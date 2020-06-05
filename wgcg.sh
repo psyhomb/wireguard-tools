@@ -324,20 +324,22 @@ gen_client_config() {
     exit 1
   fi
 
-  validator ipaddress ${client_wg_ip}
-  if [[ ${?} -ne 0 ]]; then
-    echo -e "${RED}ERROR${NONE}: ${RED}${client_wg_ip}${NONE} is not valid IP address!"
+  for ip in ${client_wg_ip} ${client_dns_ips} ${client_allowed_ips}; do
+    validator ipaddress ${ip%/*}
+    if [[ ${?} -ne 0 ]]; then
+      echo -e "${RED}ERROR${NONE}: ${RED}${ip%/*}${NONE} is not valid IP address!"
+      return 1
+    fi
+  done
+
+  if ! validator ipaddress ${server_public_ip} && ! validator fqdn ${server_public_ip}; then
+    echo -e "${RED}ERROR${NONE}: ${RED}${server_public_ip}${NONE} is not valid IP address nor FQDN!"
     return 1
   fi
 
   validator svcport ${server_port}
   if [[ ${?} -ne 0 ]]; then
     echo -e "${RED}ERROR${NONE}: ${RED}${server_port}${NONE} is not valid port number!"
-    return 1
-  fi
-
-  if ! validator ipaddress ${server_public_ip} && ! validator fqdn ${server_public_ip}; then
-    echo -e "${RED}ERROR${NONE}: ${RED}${server_public_ip}${NONE} is not valid IP address nor FQDN!"
     return 1
   fi
 
@@ -372,14 +374,6 @@ gen_client_config() {
       fi
     fi
   fi
-
-  for ip in ${client_dns_ips} ${client_allowed_ips}; do
-    validator ipaddress ${ip%/*}
-    if [[ ${?} -ne 0 ]]; then
-      echo -e "${RED}ERROR${NONE}: ${RED}${ip%/*}${NONE} is not valid IP address!"
-      return 1
-    fi
-  done
 
   gen_keys client-${client_name}
 
