@@ -281,7 +281,7 @@ gen_server_config() {
 
   cat > ${server_config} <<EOF && chmod 600 ${server_config}
 [Interface]
-Address = ${server_wg_ip}/24
+Address = ${server_wg_ip}/22
 ListenPort = ${server_port}
 PrivateKey = $(head -1 ${server_private_key})
 PostUp = /usr/local/bin/wgfw.sh add
@@ -324,9 +324,16 @@ gen_client_config() {
     exit 1
   fi
 
-  validator ipaddress ${client_wg_ip}
-  if [[ ${?} -ne 0 ]]; then
-    echo -e "${RED}ERROR${NONE}: ${RED}${client_wg_ip}${NONE} is not valid IP address!"
+  for ip in ${client_wg_ip} ${client_dns_ips} ${client_allowed_ips}; do
+    validator ipaddress ${ip%/*}
+    if [[ ${?} -ne 0 ]]; then
+      echo -e "${RED}ERROR${NONE}: ${RED}${ip%/*}${NONE} is not valid IP address!"
+      return 1
+    fi
+  done
+
+  if ! validator ipaddress ${server_public_ip} && ! validator fqdn ${server_public_ip}; then
+    echo -e "${RED}ERROR${NONE}: ${RED}${server_public_ip}${NONE} is not valid IP address nor FQDN!"
     return 1
   fi
 
@@ -336,22 +343,17 @@ gen_client_config() {
     return 1
   fi
 
-  if ! validator ipaddress ${server_public_ip} && ! validator fqdn ${server_public_ip}; then
-    echo -e "${RED}ERROR${NONE}: ${RED}${server_public_ip}${NONE} is not valid IP address nor FQDN!"
-    return 1
-  fi
-
   server_config_match=$(grep -l "^Address = ${client_wg_ip}" ${server_config})
   if [[ -n ${server_config_match} ]]; then
     echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} is used by server => ${BLUE}${server_config_match}${NONE}"
     return 1
   fi
 
-  server_wg_ip=$(awk -F'[ /]' '/^Address =/ {print $(NF-1)}' ${server_config})
-  if [[ ${server_wg_ip%.*} != ${client_wg_ip%.*} ]]; then
-    echo -e "${RED}ERROR${NONE}: Client private IP address ${RED}${client_wg_ip}${NONE} does not belong to the range: ${GREEN}${server_wg_ip%.*}.1${NONE} - ${GREEN}${server_wg_ip%.*}.254${NONE}"
-    return 1
-  fi
+  # server_wg_ip=$(awk -F'[ /]' '/^Address =/ {print $(NF-1)}' ${server_config})
+  # if [[ ${server_wg_ip%.*} != ${client_wg_ip%.*} ]]; then
+  #   echo -e "${RED}ERROR${NONE}: Client private IP address ${RED}${client_wg_ip}${NONE} does not belong to the range: ${GREEN}${server_wg_ip%.*}.1${NONE} - ${GREEN}${server_wg_ip%.*}.254${NONE}"
+  #   return 1
+  # fi
 
   if [[ -f ${client_private_key} ]]; then
     if [[ ${SKIP_ANSWER} == false ]]; then
@@ -373,19 +375,11 @@ gen_client_config() {
     fi
   fi
 
-  for ip in ${client_dns_ips} ${client_allowed_ips}; do
-    validator ipaddress ${ip%/*}
-    if [[ ${?} -ne 0 ]]; then
-      echo -e "${RED}ERROR${NONE}: ${RED}${ip%/*}${NONE} is not valid IP address!"
-      return 1
-    fi
-  done
-
   gen_keys client-${client_name}
 
   cat > ${client_config} <<EOF && chmod 600 ${client_config}
 [Interface]
-Address = ${client_wg_ip}/24
+Address = ${client_wg_ip}/22
 PrivateKey = $(head -1 ${client_private_key})
 DNS = $(echo ${client_dns_ips} | sed 's/ \+/, /g')
 
