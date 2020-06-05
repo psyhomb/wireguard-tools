@@ -19,7 +19,15 @@ For most use cases the only variable we'd have to modify is `WGCG_SERVER_PUBLIC_
 # Server name (wireguard interface name e.g. wg0 || wg1 || wg2)
 WGCG_SERVER_NAME="wg0"
 
-# VPN (WG) IP private address
+# HostMin to HostMax range can be used to assign IP addresses to WireGuard clients
+# e.g. ./wgcg.sh -c foo 10.0.0.2
+#
+# Network: 10.0.0.0/22
+# HostMin: 10.0.0.1
+# HostMax: 10.0.3.254
+# HostIDs: 1022
+#
+# WireGuard server private IP address
 WGCG_SERVER_WG_IP="10.0.0.1"
 
 # Static server port
