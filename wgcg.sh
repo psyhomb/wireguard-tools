@@ -507,21 +507,17 @@ wg_sync() {
 
   cat ${server_config} | ssh -p ${server_ssh_port} root@${server_ssh_ip} "cat > /etc/wireguard/${server_name}.conf && chmod 600 /etc/wireguard/${server_name}.conf"
   if [[ ${?} -eq 0 ]]; then
-    echo -e "${GREEN}INFO${NONE}: Server configuration ${BLUE}${server_config}${NONE} successfully copied over to the server ${BLUE}${server_ssh_ip}${NONE}"
-    echo -ne "Do you want to restart ${GREEN}wg-quick${NONE} service? (${GREEN}yes${NONE}/${RED}no${NONE}): "
-    read answer
+    ssh -p ${server_ssh_port} root@${server_ssh_ip} "
+      if ! systemctl is-enabled wg-quick@${server_name}.service &> /dev/null; then
+        systemctl enable --now wg-quick@${server_name}.service &> /dev/null
+      fi
 
-    if [[ ${answer} == "yes" ]]; then
-      ssh -p ${server_ssh_port} root@${server_ssh_ip} "
-        if ! systemctl is-enabled wg-quick@${server_name}.service &> /dev/null; then
-          systemctl enable --now wg-quick@${server_name}.service &> /dev/null
-          exit 0
-        fi
-        systemctl is-active wg-quick@${server_name}.service &> /dev/null && systemctl restart wg-quick@${server_name}.service
-      "
-    fi
+      if systemctl is-active wg-quick@${server_name}.service &> /dev/null; then
+        wg syncconf ${server_name} <(sed '/^Address =/d;/^DNS =/d;/^MTU =/d;/^PreUp =/d;/^PostUp =/d;/^PreDown =/d;/^PostDown =/d;/^SaveConfig =/d' /etc/wireguard/${server_name}.conf)
+      fi
+    "
   else
-    echo -e "${RED}ERROR${NONE}: Copying configuration ${BLUE}${server_config}${NONE} to server ${BLUE}${server_ssh_ip}${NONE} has failed!"
+    echo -e "${RED}ERROR${NONE}: Syncing configuration ${BLUE}${server_config}${NONE} with server ${BLUE}${server_ssh_ip}${NONE} failed!"
     exit 1
   fi
 }
