@@ -134,8 +134,6 @@ EOF
 
 and run.
 
-**WARNING**: In batch mode if client configuration and key files exist all will be regenerated non-interactively.
-
 ```bash
 ./wgcg.sh -B client-configs.csv
 ```
