@@ -48,6 +48,7 @@ NONE="\033[0m"
 DEPS=(
   "wg"
   "qrencode"
+  "grepcidr"
 )
 
 # Check if all dependencies are installed
@@ -96,6 +97,7 @@ help() {
 check_variables() {
   if [[ -z ${SERVER_NAME} ]] || [[ -z ${SERVER_WG_IP} ]] || [[ -z ${SERVER_PORT} ]] || [[ -z ${SERVER_PUBLIC_IP} ]] || [[ -z ${WORKING_DIR} ]]; then
     echo -e "${RED}ERROR${NONE}: Missing mandatory variables, please check and modify ${GREEN}${CONFIG_FILE}${NONE} configuration file accordingly!"
+    help
     return 1
   fi
 }
@@ -107,11 +109,12 @@ check_variables || exit ${?}
 validator() {
   local mode="${1}"
   local value="${2}"
-  local ret regex ip_octets fqdn
+  local ret regex ip_octets fqdn hostid netid
 
   ret=0
   case ${mode} in
     'ipaddress')
+      # validator ipaddress 1.1.1.1
       regex='^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'
       ip_address=${value}
       ip_octets=(${value//./ })
@@ -133,6 +136,7 @@ validator() {
       fi
     ;;
     'svcport')
+      # validator svcport 80
       regex='^[0-9]{1,5}$'
       svc_port=${value}
 
@@ -141,10 +145,21 @@ validator() {
       fi
     ;;
     'fqdn')
+      # validator fqdn test.example.com
       regex='(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\.)+[a-zA-Z]{2,63}$)'
       fqdn=${value}
 
       if ! echo ${fqdn} | grep -Pq ${regex}; then
+        ret=1
+      fi
+    ;;
+    'cidr')
+      # validator cidr "10.0.0.2 10.0.0.1/22"
+      value=(${value})
+      hostid=${value[0]}
+      netid=${value[1]}
+
+      if ! echo ${hostid} | grepcidr -e ${netid} &> /dev/null; then
         ret=1
       fi
   esac
@@ -347,15 +362,16 @@ gen_client_config() {
 
   server_config_match=$(grep -l "^Address = ${client_wg_ip}" ${server_config})
   if [[ -n ${server_config_match} ]]; then
-    echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} is used by server => ${BLUE}${server_config_match}${NONE}"
+    echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} already in use by the server => ${BLUE}${server_config_match}${NONE}"
     return 1
   fi
 
-  # server_wg_ip=$(awk -F'[ /]' '/^Address =/ {print $(NF-1)}' ${server_config})
-  # if [[ ${server_wg_ip%.*} != ${client_wg_ip%.*} ]]; then
-  #   echo -e "${RED}ERROR${NONE}: Client private IP address ${RED}${client_wg_ip}${NONE} does not belong to the range: ${GREEN}${server_wg_ip%.*}.1${NONE} - ${GREEN}${server_wg_ip%.*}.254${NONE}"
-  #   return 1
-  # fi
+  server_wg_ip=$(awk -F'[ /]' '/^Address =/ {print $(NF-1)}' ${server_config})
+  validator cidr "${client_wg_ip} ${server_wg_ip}/22"
+  if [[ ${?} -ne 0 ]]; then
+    echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} is not in the same subnet as server's IP address => ${GREEN}${server_wg_ip}/22${NONE}"
+    return 1
+  fi
 
   if [[ -f ${client_private_key} ]]; then
     # Condition will be skipped if function called from the gen_client_config_batch() function
