@@ -362,7 +362,7 @@ gen_client_config() {
 
   server_config_match=$(grep -l "^Address = ${client_wg_ip}" ${server_config})
   if [[ -n ${server_config_match} ]]; then
-    echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} is already in use by the server => ${BLUE}${server_config_match}${NONE}"
+    echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} already in use by the server => ${BLUE}${server_config_match}${NONE}"
     return 1
   fi
 
