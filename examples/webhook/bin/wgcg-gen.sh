@@ -11,7 +11,14 @@ WEBHOOK_CONFIG_PATH="/etc/webhook"
 
 
 help() {
-  echo "Usage: $(basename ${0}) add|remove|list [client_name] [private_ip]"
+  echo "Usage:"
+  echo "  $(basename ${0}) options"
+  echo
+  echo "Options:"
+  echo "  add client_name private_ip      Add new client"
+  echo "  remove client_name              Remove client"
+  echo "  list                            List existing clients"
+  echo "  help                            Show this help"
 }
 
 
@@ -67,18 +74,18 @@ case ${1} in
   'add')
     shift
     wgcg.sh --add-client-config ${1} ${2} || exit 1
+    wgcg.sh --sync
     gen_webhook_config ${1} "${WEBHOOK_CONFIG_PATH}/auth-${1}.json"
     wh.py
     chmod 600 "${WEBHOOK_CONFIG_PATH}/hooks.json" "${WEBHOOK_CONFIG_PATH}/auth-${1}.json"
-    wgcg.sh --sync
   ;;
   'remove')
     shift
     wgcg.sh --rm-client-config ${1} || exit 1
+    wgcg.sh --sync
     rm -f "${WEBHOOK_CONFIG_PATH}/auth-${1}.json"
     wh.py
     chmod 600 "${WEBHOOK_CONFIG_PATH}/hooks.json"
-    wgcg.sh --sync
   ;;
   'list')
     wgcg.sh --list-used-ips
