@@ -1,0 +1,260 @@
+wgcg with webhook
+=================
+
+Here we're going to show how we can use [wgcg.sh](../../README.md) tool in combination with [webhook](https://github.com/adnanh/webhook) service to provide easy access to QRCodes that will carry WireGuard client information (configuration).
+
+We'll assume that [wgcg.sh](../../README.md) is already configured and ready to use.
+
+Preparation
+-----------
+
+Copy all the scripts from local [bin](./bin) to `/usr/local/bin` directory on the remote server where [wgcg.sh](../../README.md) script is already installed.
+
+Download, install and configure `webhook` and `nginx` services.
+
+### Webhook
+
+Install `webhook` binary.
+
+```bash
+WEBHOOK_VERSION="2.7.0"
+wget https://github.com/adnanh/webhook/releases/download/${WEBHOOK_VERSION}/webhook-linux-amd64.tar.gz
+tar xzvf webhook-linux-amd64.tar.gz
+mv webhook-linux-amd64/webhook /usr/local/bin/webhook_${WEBHOOK_VERSION}
+cd /usr/local/bin
+chown root:root webhook_${WEBHOOK_VERSION}
+ln -snf webhook_${WEBHOOK_VERSION} webhook
+cd
+```
+
+Specify command line options that will be used by `webhook` service.
+
+```bash
+cat > /etc/default/webhook <<'EOF'
+### SSL termination on Webhook layer
+#OPTIONS="-hooks=/etc/webhook/hooks.json -hotreload -ip 127.0.0.1 -port 9000 -secure -cert /etc/webhook/ssl/wgcg.example.com.crt -key /etc/webhook/ssl/wgcg.example.com.key"
+
+### SSL termination on Nginx layer
+OPTIONS="-hooks=/etc/webhook/hooks.json -hotreload -ip 127.0.0.1 -port 9000"
+EOF
+```
+
+Create systemd unit for `webhook` service.
+
+```bash
+systemctl edit --force --full webhook.service
+```
+
+```plain
+[Unit]
+Description=Webhook Service
+Documentation=https://github.com/adnanh/webhook
+
+[Service]
+EnvironmentFile=/etc/default/webhook
+ExecStart=/usr/local/bin/webhook $OPTIONS
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Create first part of `webhook` configuration file that will be used by our scripts to automatically generate the main configuration file => `/etc/webhook/hooks.json`
+
+```bash
+cat > /etc/webhook/main.json <<'EOF'
+[
+  {
+    "id": "wgcg",
+    "execute-command": "/usr/local/bin/wgcg-html-qrcode.sh",
+    "include-command-output-in-response": true,
+    "response-headers": [
+      {
+        "name": "Cache-Control",
+        "value": "no-store, no-cache, must-revalidate"
+      }
+    ],
+    "pass-arguments-to-command": [
+      {
+        "source": "url",
+        "name": "servername"
+      },
+      {
+        "source": "url",
+        "name": "username"
+      }
+    ],
+    "trigger-rule": {}
+  }
+]
+EOF
+```
+
+### Nginx
+
+Install `nginx` service.
+
+```bash
+apt install nginx
+```
+
+Create vhost configuration.
+
+```bash
+cat > /etc/nginx/sites-available/wgcg.example.com.conf <<'EOF'
+# Disable emitting nginx version
+server_tokens off;
+
+# Sets the maximum allowed size of the client request body
+# Setting size to 0 disables checking of client request body size
+#client_max_body_size 0;
+
+server {
+    listen 80 default_server;
+    server_name wgcg.example.com;
+
+    location / {
+        return 301 https://$server_name$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name wgcg.example.com;
+
+    access_log /var/log/nginx/wgcg.example.com_access.log;
+    error_log  /var/log/nginx/wgcg.example.com_error.log;
+
+    ssl_certificate         /etc/nginx/conf.d/ssl/wgcg.example.com.crt;
+    ssl_certificate_key     /etc/nginx/conf.d/ssl/wgcg.example.com.key;
+    #ssl_trusted_certificate /etc/nginx/conf.d/ssl/ca-certs.pem;
+
+    ssl_session_cache   shared:SSL:20m;
+    ssl_session_timeout 10m;
+
+    ssl_prefer_server_ciphers       on;
+    ssl_protocols                   TLSv1 TLSv1.1 TLSv1.2;
+    ssl_ciphers                     ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+
+    location /healthcheck {
+        add_header Content-Type "text/plain";
+        return 200 "OK";
+    }
+
+    location / {
+        #satisfy all;
+
+        #allow 10.0.0.0/8;
+        #deny  all;
+
+        auth_basic "wgcg";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+
+        proxy_pass http://127.0.0.1:9000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+```
+
+Disable `default` vhost and enable our newly added vhost configuration.
+
+```bash
+cd /etc/nginx/sites-enabled
+rm -f default
+ln -snf /etc/nginx/sites-available/wgcg.example.com.conf
+cd
+```
+
+Create `test` user that will be used for Nginx Basic Auth.
+
+Install required utils.
+
+```bash
+apt install apache2-utils
+```
+
+Create a user.
+
+```bash
+htpasswd -c /etc/nginx/.htpasswd test
+```
+
+Use Let's Encrypt with [certbot](https://certbot.eff.org/all-instructions) client to generate certificates if needed.
+
+```bash
+apt install certbot
+```
+
+**Note:** We're using DNS TXT RR for verification because our Nginx instance isn't internet-facing.
+
+```bash
+certbot certonly --manual --preferred-challenges dns
+```
+
+Find generated certificates and copy them to `/etc/nginx/conf.d/ssl` location.
+
+**Note:** Please be sure to name it exactly like it is specified in the Nginx configuration file.
+
+```bash
+certbot certificates
+```
+
+Fire up
+-------
+
+Now when all the components are in place we are ready to fire up the services.
+
+Generate webhook's main configuration file => `/etc/webhook/hooks.json`
+
+**Note:** This script has to be executed only once and before `webhook` service is started for the first time.
+
+```bash
+wh.py
+```
+
+Enable and start `webhook` and restart `nginx` service.
+
+```bash
+systemctl enable --now webhook
+systemctl restart nginx
+```
+
+Check if everything is running without errors.
+
+```bash
+journalctl -fu webhook
+journalctl -fu nginx
+```
+
+Usage
+-----
+
+Generate client configuration.
+
+```bash
+wgcg-gen.sh add test@example.com 10.0.0.2
+```
+
+Remove client configuration.
+
+```bash
+wgcg-gen.sh remove test@example.com
+```
+
+List existing clients.
+
+```bash
+wgcg-gen.sh list
+```
+
+When new client is added URL (QRCode location) will be printed out.
+
+Example:
+
+https://wgcg.example.com/hooks/wgcg?servername=server1&username=test@example.com&token=QwhRKi2WNz9UFqqUE6nZsNckQ2jDQtGfqqvCl6kC
