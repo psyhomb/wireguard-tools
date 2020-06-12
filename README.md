@@ -27,7 +27,7 @@ WGCG_SERVER_NAME="wg0"
 # HostMax: 10.0.3.254
 # HostIDs: 1022
 #
-# WireGuard server private IP address
+# WireGuard server private IP address (with optional CIDR - default: 22)
 WGCG_SERVER_WG_IP="10.0.0.1"
 
 # Static server port
