@@ -109,7 +109,7 @@ check_variables || exit ${?}
 validator() {
   local mode="${1}"
   local value="${2}"
-  local ret regex ip_octets fqdn hostid netid
+  local ret regex ip_octets fqdn cidr hostid netid
 
   ret=0
   case ${mode} in
@@ -154,7 +154,16 @@ validator() {
       fi
     ;;
     'cidr')
-      # validator cidr "10.0.0.2 10.0.0.1/22"
+      # validator cidr 24
+      regex='^[0-9]{1,2}$'
+      cidr=${value}
+
+      if [[ ! ${cidr} =~ ${regex} ]] || [[ ${cidr} -gt 32 ]]; then
+        ret=1
+      fi
+    ;;
+    'in_cidr')
+      # validator in_cidr "10.0.0.2 10.0.0.1/22"
       value=(${value})
       hostid=${value[0]}
       netid=${value[1]}
@@ -265,8 +274,12 @@ gen_keys() {
 # Generate server configuration file
 gen_server_config() {
   local server_name="${1}"
-  local server_wg_ip="${2}"
+  local server_wg_ip_cidr="${2}"
   local server_port="${3}"
+
+  local server_wg_ip="${server_wg_ip_cidr%%/*}"
+  local cidr="$(echo ${server_wg_ip_cidr} | awk -F'/' '{print $2}')"
+  local cidr="${cidr:-22}"
 
   [[ ! -d ${WORKING_DIR} ]] && mkdir -p ${WORKING_DIR}
 
@@ -286,6 +299,12 @@ gen_server_config() {
     exit 1
   fi
 
+  validator cidr ${cidr}
+  if [[ ${?} -ne 0 ]]; then
+    echo -e "${RED}ERROR${NONE}: ${RED}${cidr}${NONE} is not valid CIDR!"
+    exit 1
+  fi
+
   if [[ -f ${server_private_key} ]]; then
     echo -e "${YELLOW}WARNING${NONE}: This is destructive operation, also it will require regeneration of all client configs!"
     echo -ne "Server config and keys are already generated, do you want to overwrite it? (${GREEN}yes${NONE}/${RED}no${NONE}): "
@@ -298,7 +317,7 @@ gen_server_config() {
 
   cat > ${server_config} <<EOF && chmod 600 ${server_config}
 [Interface]
-Address = ${server_wg_ip}/22
+Address = ${server_wg_ip}/${cidr}
 ListenPort = ${server_port}
 PrivateKey = $(head -1 ${server_private_key})
 PostUp = /usr/local/bin/wgfw.sh add
@@ -318,7 +337,7 @@ gen_client_config() {
   local server_name="${3}"
   local server_port="${4}"
   local server_public_ip="${5}"
-  local server_wg_ip client_config_match server_config_match
+  local server_wg_ip_cidr server_wg_ip cidr client_config_match server_config_match
 
   local client_dns_ips="${6:-1.1.1.1 1.0.0.1}"
   local client_allowed_ips="${7:-0.0.0.0/0}"
@@ -366,10 +385,12 @@ gen_client_config() {
     return 1
   fi
 
-  server_wg_ip=$(awk -F'[ /]' '/^Address =/ {print $(NF-1)}' ${server_config})
-  validator cidr "${client_wg_ip} ${server_wg_ip}/22"
+  server_wg_ip_cidr=$(awk '/^Address =/ {print $NF}' ${server_config})
+  server_wg_ip=${server_wg_ip_cidr%%/*}
+  cidr=${server_wg_ip_cidr##*/}
+  validator in_cidr "${client_wg_ip} ${server_wg_ip}/${cidr}"
   if [[ ${?} -ne 0 ]]; then
-    echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} is not in the same subnet as server's IP address => ${GREEN}${server_wg_ip}/22${NONE}"
+    echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} is not in the same subnet as server's IP address => ${GREEN}${server_wg_ip}/${cidr}${NONE}"
     return 1
   fi
 
@@ -404,7 +425,7 @@ gen_client_config() {
 
   cat > ${client_config} <<EOF && chmod 600 ${client_config}
 [Interface]
-Address = ${client_wg_ip}/22
+Address = ${client_wg_ip}/${cidr}
 PrivateKey = $(head -1 ${client_private_key})
 DNS = $(echo ${client_dns_ips} | sed 's/ \+/, /g')
 
