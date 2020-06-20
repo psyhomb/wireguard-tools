@@ -62,7 +62,7 @@ WantedBy=multi-user.target
 Create first part of `webhook` configuration file that will be used by our scripts to automatically generate the main configuration file => `/etc/webhook/hooks.json`
 
 ```bash
-cat > /etc/webhook/main.json <<'EOF'
+mkdir -p /etc/webhook && cat > /etc/webhook/main.json <<'EOF'
 [
   {
     "id": "wgcg",
