@@ -66,7 +66,7 @@ mkdir -p /etc/webhook && cat > /etc/webhook/main.json <<'EOF'
 [
   {
     "id": "wgcg",
-    "execute-command": "/usr/local/bin/wgcg-html-qrcode.sh",
+    "execute-command": "/usr/local/bin/wgcg-html-gpg.sh",
     "include-command-output-in-response": true,
     "response-headers": [
       {

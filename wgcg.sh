@@ -47,6 +47,7 @@ NONE="\033[0m"
 ### Dependencies required by the script
 DEPS=(
   "wg"
+  "gpg"
   "qrencode"
   "grepcidr"
 )
@@ -74,6 +75,8 @@ help() {
   echo -e "  ${GREEN}-B${NONE}|${GREEN}--add-clients-batch${NONE} filename.csv[:rewrite|:norewrite]  Generate configuration for multiple clients in batch mode"
   echo -e "                                                            Supported action modes are 'rewrite' or 'norewrite' (default)"
   echo -e "                                                            'rewrite' action mean regenerate ALL, 'norewrite' mean generate only configs and keys for new clients"
+  echo -e "  ${GREEN}-e${NONE}|${GREEN}--encrypt-config${NONE} client_name [passphrase]              Encrypt configuration file by using symmetric encryption (if passphrase not specified it will be generated - RECOMMENDED)"
+  echo -e "  ${GREEN}-d${NONE}|${GREEN}--decrypt-config${NONE} client_name                           Decrypt configuration file and print it out on STDOUT"
   echo -e "  ${GREEN}-r${NONE}|${GREEN}--rm-client-config${NONE} client_name                         Remove client configuration"
   echo -e "  ${GREEN}-q${NONE}|${GREEN}--gen-qr-code${NONE} client_name                              Generate QR code from client configuration file"
   echo -e "  ${GREEN}-l${NONE}|${GREEN}--list-used-ips${NONE}                                        List all client's IPs that are currently in use"
@@ -177,6 +180,72 @@ validator() {
 }
 
 
+# Generate password of specified length
+genpass() {
+  local length=${1:-40}
+  local re='^[0-9]*$'
+
+  if [[ ${length} =~ ${re} ]]; then
+    # LC_CTYPE=C required if running on MacOS
+    LC_CTYPE=C tr -dc 'A-Za-z0-9#$!@:/%' < /dev/urandom | head -c ${length} | xargs
+  else
+    return 1
+  fi
+}
+
+
+# Encrypt configuration file by using symmetric encryption
+encrypt() {
+  local client_name="${1}"
+  local passphrase="${2:-$(genpass)}"
+
+  local client_config="${WORKING_DIR}/client-${client_name}.conf"
+  local client_config_asc="${client_config}.asc"
+
+  if [[ ! -f ${client_config} ]]; then
+    echo -e "${RED}ERROR${NONE}: Client config ${BLUE}${client_config}${NONE} could not be found!"
+    exit 1
+  fi
+
+  gpg \
+    --yes \
+    --armor \
+    --pinentry-mode loopback \
+    --passphrase "${passphrase}" \
+    --symmetric ${client_config} 2> /dev/null
+
+  if [[ ${?} -eq 0 ]]; then
+    chmod 600 ${client_config_asc}
+    echo -e "${GREEN}INFO${NONE}: Client config ${BLUE}${client_config}${NONE} => ${BLUE}${client_config_asc##*/}${NONE} has been successfully encrypted with following passphrase: ${RED}${passphrase}${NONE}"
+    echo -e "${GREEN}INFO${NONE}: Client can use gpg tool to decrypt configuration file: ${GREEN}gpg -o ${client_config##*/} -d ${client_config_asc##*/}${NONE}"
+  else
+    echo -e "${RED}ERROR${NONE}: Failed to encrypt ${BLUE}${client_config}${NONE} configuration file!"
+    exit 1
+  fi
+}
+
+
+# Decrypt configuration file and print it out on STDOUT
+decrypt() {
+  local client_name="${1}"
+
+  local client_config="${WORKING_DIR}/client-${client_name}.conf"
+  local client_config_asc="${client_config}.asc"
+
+  if [[ ! -f ${client_config_asc} ]]; then
+    echo -e "${RED}ERROR${NONE}: Encrypted client config ${BLUE}${client_config_asc}${NONE} could not be found!"
+    exit 1
+  fi
+
+  gpg --decrypt ${client_config_asc} 2> /dev/null
+
+  if [[ ${?} -ne 0 ]]; then
+    echo -e "${RED}ERROR${NONE}: Failed to decrypt ${BLUE}${client_config_asc}${NONE} configuration file!"
+    exit 1
+  fi
+}
+
+
 # Prepare system to run Wireguard
 wg_sysprep() {
   local sysprep_module="${1}"
@@ -251,7 +320,7 @@ remove_client_config() {
   mv ${server_config}.backup ${server_config}
 
   # Delete config and key files
-  rm -f ${WORKING_DIR}/client-${client_name}{.conf,.conf.png,-private.key,-public.key}
+  rm -f ${WORKING_DIR}/client-${client_name}{.conf,.conf.png,.conf.asc,-private.key,-public.key}
 
   echo -e "${GREEN}INFO${NONE}: Client config ${RED}${client_config}${NONE} has been successfully removed!"
 }
@@ -578,6 +647,16 @@ case ${1} in
     [[ ${?} -ne 0 ]] && exit 1
     # client_name
     gen_qr ${1}
+  ;;
+  '-e'|'--encrypt-config')
+    shift
+    # client_name, passphrase
+    encrypt ${1} "${2}"
+  ;;
+  '-d'|'--decrypt-config')
+    shift
+    # client_name
+    decrypt ${1}
   ;;
   '-r'|'--rm-client-config')
     shift
