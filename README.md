@@ -10,6 +10,27 @@ wgcg.sh
 
 This script is created to ease manual process of Wireguard configuration and will help you to automatically generate all the required configuration files (client and server), PKI key pairs and preshared key.
 
+### Install dependencies
+
+**Arch**
+
+```bash
+pacman -S wireguard-tools gnupg qrencode
+yay grepcidr
+```
+
+**Ubuntu**
+
+```bash
+apt-get install wireguard-tools gpg qrencode grepcidr
+```
+
+**MacOS**
+
+```bash
+brew install wireguard-tools gpg qrencode grepcidr
+```
+
 ### Usage
 
 Before running the script we'll have to update [wgcg.conf](./wgcg.conf) configuration file.  
@@ -81,6 +102,8 @@ Options:
   -B|--add-clients-batch filename.csv[:rewrite|:norewrite]  Generate configuration for multiple clients in batch mode
                                                             Supported action modes are 'rewrite' or 'norewrite' (default)
                                                             'rewrite' action mean regenerate ALL, 'norewrite' mean generate only configs and keys for new clients
+  -e|--encrypt-config client_name [passphrase]              Encrypt configuration file by using symmetric encryption (if passphrase not specified it will be generated - RECOMMENDED)
+  -d|--decrypt-config client_name                           Decrypt configuration file and print it out on STDOUT
   -r|--rm-client-config client_name                         Remove client configuration
   -q|--gen-qr-code client_name                              Generate QR code from client configuration file
   -l|--list-used-ips                                        List all client's IPs that are currently in use
@@ -164,8 +187,22 @@ Remove client config, PKI key pairs and update server config (remove Peer block)
 ./wgcg.sh -r foo
 ```
 
-Copy updated server configuration file to server.
+Synchronize local server configuration file with server (live update).
 
 ```bash
 ./wgcg.sh --sync
+```
+
+In order to send client configuration file safely to the client you can use GPG symmetric encryption to encrypt it before sending, then you can send configuration file to client via one channel and passphrase via different channel.
+
+Encrypt configuration file.
+
+```bash
+./wgcg.sh -e foo
+```
+
+To test passphrase just run decrypt command, if everything is OK client configuration file will be printed out on the standard output.
+
+```bash
+./wgcg.sh -d foo
 ```

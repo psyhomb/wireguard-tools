@@ -23,12 +23,12 @@ help() {
 
 
 genpass() {
-  local LENGTH=${1:-16}
-  local RE='^[0-9]*$'
+  local length=${1:-40}
+  local re='^[0-9]*$'
 
-  if [[ ${LENGTH} =~ ${RE} ]]; then
+  if [[ ${length} =~ ${re} ]]; then
     # LC_CTYPE=C required if running on MacOS
-    LC_CTYPE=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c ${LENGTH} | xargs
+    LC_CTYPE=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c ${length} | xargs
   else
     return 1
   fi
@@ -38,7 +38,7 @@ genpass() {
 gen_webhook_config() {
   local client_name=${1}
   local auth_file=${2}
-  local client_token=$(genpass 40)
+  local client_token=$(genpass)
 
   cat > ${auth_file} <<EOF
 {
@@ -66,7 +66,7 @@ gen_webhook_config() {
   ]
 }
 EOF
-  echo -e "\n${WGCG_QR_ENDPOINT}&username=${client_name}&token=${client_token}\n"
+  echo -e "\nURL: ${WGCG_QR_ENDPOINT}&username=${client_name}&token=${client_token}\n"
 }
 
 
@@ -74,6 +74,7 @@ case ${1} in
   'add')
     shift
     wgcg.sh --add-client-config ${1} ${2} || exit 1
+    wgcg.sh --encrypt-config ${1}
     wgcg.sh --sync
     gen_webhook_config ${1} "${WEBHOOK_CONFIG_PATH}/auth-${1}.json"
     wh.py
