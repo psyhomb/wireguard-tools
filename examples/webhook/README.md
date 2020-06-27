@@ -127,7 +127,7 @@ server {
     access_log /var/log/nginx/wgcg.yourdomain.com_access.log;
     error_log  /var/log/nginx/wgcg.yourdomain.com_error.log;
 
-    ssl_certificate         /etc/letsencrypt/live/wgcg.yourdomain.com/cert.pem;
+    ssl_certificate         /etc/letsencrypt/live/wgcg.yourdomain.com/fullchain.pem;
     ssl_certificate_key     /etc/letsencrypt/live/wgcg.yourdomain.com/privkey.pem;
     #ssl_trusted_certificate /etc/nginx/conf.d/ssl/ca-certs.pem;
 
