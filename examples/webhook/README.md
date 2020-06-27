@@ -100,6 +100,8 @@ apt install nginx
 
 Create vhost configuration.
 
+**Note:** Don't forget to replace `wgcg.example.com` domain name with real domain name and to generate certificate for it (see `certbot` section down below).
+
 ```bash
 cat > /etc/nginx/sites-available/wgcg.example.com.conf <<'EOF'
 # Disable emitting nginx version
@@ -125,8 +127,8 @@ server {
     access_log /var/log/nginx/wgcg.example.com_access.log;
     error_log  /var/log/nginx/wgcg.example.com_error.log;
 
-    ssl_certificate         /etc/nginx/conf.d/ssl/wgcg.example.com.crt;
-    ssl_certificate_key     /etc/nginx/conf.d/ssl/wgcg.example.com.key;
+    ssl_certificate         /etc/letsencrypt/live/wgcg.example.com/cert.pem;
+    ssl_certificate_key     /etc/letsencrypt/live/wgcg.example.com/privkey.pem;
     #ssl_trusted_certificate /etc/nginx/conf.d/ssl/ca-certs.pem;
 
     ssl_session_cache   shared:SSL:20m;
