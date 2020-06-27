@@ -6,7 +6,7 @@
 export WGCG_CONFIG_FILE="${HOME}/wireguard/wgcg/wgcg.conf"
 source ${WGCG_CONFIG_FILE}
 
-WGCG_QR_ENDPOINT="https://wgcg.example.com/hooks/wgcg?servername=${WGCG_SERVER_NAME}"
+WGCG_QR_ENDPOINT="https://wgcg.yourdomain.com/hooks/wgcg?servername=${WGCG_SERVER_NAME}"
 WEBHOOK_CONFIG_PATH="/etc/webhook"
 
 
