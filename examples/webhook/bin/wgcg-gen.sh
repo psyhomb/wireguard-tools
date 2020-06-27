@@ -75,7 +75,10 @@ case ${1} in
     shift
     wgcg.sh --add-client-config ${1} ${2} || exit 1
     wgcg.sh --encrypt-config ${1}
+
+    echo "Syncing configuration with server..."
     wgcg.sh --sync
+
     gen_webhook_config ${1} "${WEBHOOK_CONFIG_PATH}/auth-${1}.json"
     wh.py
     chmod 600 "${WEBHOOK_CONFIG_PATH}/hooks.json" "${WEBHOOK_CONFIG_PATH}/auth-${1}.json"
@@ -83,7 +86,10 @@ case ${1} in
   'remove')
     shift
     wgcg.sh --rm-client-config ${1} || exit 1
+
+    echo "Syncing configuration with server..."
     wgcg.sh --sync
+
     rm -f "${WEBHOOK_CONFIG_PATH}/auth-${1}.json"
     wh.py
     chmod 600 "${WEBHOOK_CONFIG_PATH}/hooks.json"
