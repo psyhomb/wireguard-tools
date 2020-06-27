@@ -201,7 +201,7 @@ Encrypt configuration file.
 ./wgcg.sh -e foo
 ```
 
-To test passphrase just run decrypt command, if everything is OK client configuration file will be printed out on the standard output.
+To test passphrase just run decrypt command, if everything is OK client configuration will be printed out on the standard output.
 
 ```bash
 ./wgcg.sh -d foo
