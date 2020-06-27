@@ -1,7 +1,7 @@
 wgcg with webhook
 =================
 
-Here we're going to show how we can use [wgcg.sh](../../README.md) tool in combination with [webhook](https://github.com/adnanh/webhook) service to provide easy access to QRCodes that will carry WireGuard client information (configuration).
+Here we're going to show how we can use [wgcg.sh](../../README.md) tool in combination with [webhook](https://github.com/adnanh/webhook) service to create endpoint from where client will be able to download WireGuard configuration.
 
 We'll assume that [wgcg.sh](../../README.md) is already configured and ready to use.
 
@@ -253,7 +253,7 @@ List existing clients.
 wgcg-gen.sh list
 ```
 
-When new client is added URL (QRCode location) will be printed out.
+When new client is added, URL where client can download configuration will be printed out.
 
 Example:
 
