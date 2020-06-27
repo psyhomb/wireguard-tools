@@ -199,8 +199,6 @@ apt install certbot
 certbot certonly --manual --preferred-challenges dns
 ```
 
-Find generated certificates and copy them to `/etc/nginx/conf.d/ssl` location.
-
 **Note:** Please be sure to name it exactly like it is specified in the Nginx configuration file.
 
 ```bash
