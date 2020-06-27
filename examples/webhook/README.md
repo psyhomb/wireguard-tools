@@ -32,7 +32,7 @@ Specify command line options that will be used by `webhook` service.
 ```bash
 cat > /etc/default/webhook <<'EOF'
 ### SSL termination on Webhook layer
-#OPTIONS="-hooks=/etc/webhook/hooks.json -hotreload -ip 127.0.0.1 -port 9000 -secure -cert /etc/webhook/ssl/wgcg.example.com.crt -key /etc/webhook/ssl/wgcg.example.com.key"
+#OPTIONS="-hooks=/etc/webhook/hooks.json -hotreload -ip 127.0.0.1 -port 9000 -secure -cert /etc/webhook/ssl/wgcg.yourdomain.com.crt -key /etc/webhook/ssl/wgcg.yourdomain.com.key"
 
 ### SSL termination on Nginx layer
 OPTIONS="-hooks=/etc/webhook/hooks.json -hotreload -ip 127.0.0.1 -port 9000"
@@ -100,10 +100,10 @@ apt install nginx
 
 Create vhost configuration.
 
-**Note:** Don't forget to replace `wgcg.example.com` domain name with real domain name and to generate certificate for it (see `certbot` section down below).
+**Note:** Don't forget to replace `wgcg.yourdomain.com` domain name with real domain name and to generate certificate for it (see `certbot` section down below).
 
 ```bash
-cat > /etc/nginx/sites-available/wgcg.example.com.conf <<'EOF'
+cat > /etc/nginx/sites-available/wgcg.yourdomain.com.conf <<'EOF'
 # Disable emitting nginx version
 server_tokens off;
 
@@ -113,7 +113,7 @@ server_tokens off;
 
 server {
     listen 80 default_server;
-    server_name wgcg.example.com;
+    server_name wgcg.yourdomain.com;
 
     location / {
         return 301 https://$server_name$request_uri;
@@ -122,13 +122,13 @@ server {
 
 server {
     listen 443 ssl;
-    server_name wgcg.example.com;
+    server_name wgcg.yourdomain.com;
 
-    access_log /var/log/nginx/wgcg.example.com_access.log;
-    error_log  /var/log/nginx/wgcg.example.com_error.log;
+    access_log /var/log/nginx/wgcg.yourdomain.com_access.log;
+    error_log  /var/log/nginx/wgcg.yourdomain.com_error.log;
 
-    ssl_certificate         /etc/letsencrypt/live/wgcg.example.com/cert.pem;
-    ssl_certificate_key     /etc/letsencrypt/live/wgcg.example.com/privkey.pem;
+    ssl_certificate         /etc/letsencrypt/live/wgcg.yourdomain.com/cert.pem;
+    ssl_certificate_key     /etc/letsencrypt/live/wgcg.yourdomain.com/privkey.pem;
     #ssl_trusted_certificate /etc/nginx/conf.d/ssl/ca-certs.pem;
 
     ssl_session_cache   shared:SSL:20m;
@@ -169,7 +169,7 @@ Disable `default` vhost and enable our newly added vhost configuration.
 ```bash
 cd /etc/nginx/sites-enabled
 rm -f default
-ln -snf /etc/nginx/sites-available/wgcg.example.com.conf
+ln -snf /etc/nginx/sites-available/wgcg.yourdomain.com.conf
 cd
 ```
 
@@ -238,13 +238,13 @@ Usage
 Generate client configuration.
 
 ```bash
-wgcg-gen.sh add test@example.com 10.0.0.2
+wgcg-gen.sh add test@yourdomain.com 10.0.0.2
 ```
 
 Remove client configuration.
 
 ```bash
-wgcg-gen.sh remove test@example.com
+wgcg-gen.sh remove test@yourdomain.com
 ```
 
 List existing clients.
@@ -257,4 +257,4 @@ When new client is added, URL where client can download configuration will be pr
 
 Example:
 
-https://wgcg.example.com/hooks/wgcg?servername=server1&username=test@example.com&token=QwhRKi2WNz9UFqqUE6nZsNckQ2jDQtGfqqvCl6kC
+https://wgcg.yourdomain.com/hooks/wgcg?servername=server1&username=test@yourdomain.com&token=QwhRKi2WNz9UFqqUE6nZsNckQ2jDQtGfqqvCl6kC
