@@ -148,7 +148,7 @@ validator() {
       fi
     ;;
     'fqdn')
-      # validator fqdn test.example.com
+      # validator fqdn test.yourdomain.com
       regex='(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\.)+[a-zA-Z]{2,63}$)'
       fqdn=${value}
 
