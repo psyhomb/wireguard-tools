@@ -14,7 +14,7 @@ fi
 echo '<html>
 <head>
   <title>wgcg</title>
-  <link rel="shortcut icon" href="https://www.example.com/favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="https://www.yourdomain.com/favicon.ico" type="image/x-icon">
   <style>
     body {
       background-color: #eeeeee;
