@@ -55,7 +55,7 @@ WGCG_SERVER_WG_IP="10.0.0.1"
 WGCG_SERVER_PORT="52001"
 
 # Server's public IP or FQDN
-WGCG_SERVER_PUBLIC_IP="wg.example.com"
+WGCG_SERVER_PUBLIC_IP="wg.yourdomain.com"
 
 # SSH server IP address (default: ${WGCG_SERVER_PUBLIC_IP}) (optional)
 # Note: This option can be used in case SSH server is listening on different IP address,
@@ -114,7 +114,7 @@ Current default options:
   WGCG_SERVER_NAME="wg0"
   WGCG_SERVER_WG_IP="10.0.0.1"
   WGCG_SERVER_PORT="52001"
-  WGCG_SERVER_PUBLIC_IP="wg.example.com"
+  WGCG_SERVER_PUBLIC_IP="wg.yourdomain.com"
   WGCG_SERVER_SSH_PORT="22"
   WGCG_CLIENT_DNS_IPS="1.1.1.1 1.0.0.1"
   WGCG_CLIENT_ALLOWED_IPS="0.0.0.0/0"
