@@ -6,9 +6,7 @@ Full documentation about Wireguard installation and configuration process can be
 wgcg.sh
 -------
 
-<div align="center">
 ![wgcg](./images/wgcg.png)
-</div>
 
 ### About
 
