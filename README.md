@@ -7,7 +7,7 @@ wgcg.sh
 -------
 
 <div align="center">
-![wgcg](./images/wgcg.png)
+![wgcg](images/wgcg.png)
 </div>
 
 ### About
