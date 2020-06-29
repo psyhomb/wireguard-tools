@@ -6,6 +6,10 @@ Full documentation about Wireguard installation and configuration process can be
 wgcg.sh
 -------
 
+<div align="center">
+![wgcg](./images/wgcg.png)
+</div>
+
 ### About
 
 This script is created to ease manual process of Wireguard configuration and will help you to automatically generate all the required configuration files (client and server), PKI key pairs and preshared key.
