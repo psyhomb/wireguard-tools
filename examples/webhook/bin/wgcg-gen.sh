@@ -1,12 +1,12 @@
 #!/bin/bash
 # Author: Milos Buncic
 # Date: 2020/06/10
-# Description: Generate and sync WireGuard configuration and publish QRCode via webhook service
+# Description: Generate and sync WireGuard configuration and publish the configuration via HTTP endpoint
 
-export WGCG_CONFIG_FILE="${HOME}/wireguard/wgcg/wgcg.conf"
+export WGCG_CONFIG_FILE="${HOME}/wireguard/wgcg/wg-1.conf"
 source ${WGCG_CONFIG_FILE}
 
-WGCG_QR_ENDPOINT="https://wgcg.yourdomain.com/hooks/wgcg?servername=${WGCG_SERVER_NAME}"
+WEBHOOK_ENDPOINT="https://wgcg.yourdomain.com/hooks/wgcg?servername=${WGCG_SERVER_NAME}"
 WEBHOOK_CONFIG_PATH="/etc/webhook"
 
 
@@ -66,7 +66,7 @@ gen_webhook_config() {
   ]
 }
 EOF
-  echo -e "\nURL: ${WGCG_QR_ENDPOINT}&username=${client_name}&token=${client_token}\n"
+  echo -e "\nURL: ${WEBHOOK_ENDPOINT}&username=${client_name}&token=${client_token}\n"
 }
 
 
@@ -78,6 +78,9 @@ case ${1} in
 
     echo "Syncing configuration with server..."
     wgcg.sh --sync
+    if [[ -f "/root/wireguard/wgcg/wg-2.conf" ]]; then
+      WGCG_CONFIG_FILE=/root/wireguard/wgcg/wg-2.conf wgcg.sh --sync
+    fi
 
     gen_webhook_config ${1} "${WEBHOOK_CONFIG_PATH}/auth-${1}.json"
     wh.py
@@ -89,6 +92,9 @@ case ${1} in
 
     echo "Syncing configuration with server..."
     wgcg.sh --sync
+    if [[ -f "/root/wireguard/wgcg/wg-2.conf" ]]; then
+      WGCG_CONFIG_FILE=/root/wireguard/wgcg/wg-2.conf wgcg.sh --sync
+    fi
 
     rm -f "${WEBHOOK_CONFIG_PATH}/auth-${1}.json"
     wh.py

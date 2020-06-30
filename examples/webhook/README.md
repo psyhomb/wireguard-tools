@@ -5,6 +5,11 @@ Here we're going to show how we can use [wgcg.sh](../../README.md) tool in combi
 
 We'll assume that [wgcg.sh](../../README.md) is already configured and ready to use.
 
+The only difference from standard configuration is that you will have to create 2 configuration files if you plan to configure 2 WireGuard servers behind LB and to set valid SSH IP address (`WGCG_SERVER_SSH_IP`) in both configuration files, all other settings should be the same:
+
+- `/root/wireguard/wgcg/wg-1.conf`
+- `/root/wireguard/wgcg/wg-2.conf`
+
 Preparation
 -----------
 
