@@ -1,7 +1,7 @@
 #!/bin/bash
 # Author: Milos Buncic
 # Date: 2020/06/10
-# Description: Generate HTML page with embedded base64 encoded QRCode
+# Description: Generate HTML page with GPG encrypted WireGuard configuration file
 
 SERVER_NAME=${1}
 USERNAME=${2}
