@@ -1,7 +1,7 @@
 wireguard-tools
 ===============
 
-Full documentation about Wireguard installation and configuration process can be found [here](https://gitlab.com/snippets/1897102).
+Full documentation about manual Wireguard installation and configuration process can be found [here](https://gitlab.com/snippets/1897102).
 
 wgcg.sh
 -------
@@ -209,4 +209,26 @@ To test passphrase just run decrypt command, if everything is OK client configur
 
 ```bash
 ./wgcg.sh -d foo
+```
+
+### Docker
+
+It is also possible to run the script inside of Docker container with already preinstalled dependecies.
+
+Build docker image.
+
+```bash
+docker build --no-cache --force-rm --build-arg USER=${USER} --build-arg UID=${UID} -t wgcg .
+```
+
+Run the script.
+
+```bash
+./wgcg-docker.sh -h
+```
+
+or if you are not using default configuration filename (`wgcg.conf`).
+
+```bash
+WGCG_CONFIG_FILE="${HOME}/wireguard/wgcg/wg0.conf" ./wgcg-docker.sh -h
 ```
