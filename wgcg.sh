@@ -187,7 +187,7 @@ genpass() {
 
   if [[ ${length} =~ ${re} ]]; then
     # LC_CTYPE=C required if running on MacOS
-    LC_CTYPE=C tr -dc 'A-Za-z0-9#$!@:/%' < /dev/urandom | head -c ${length} | xargs
+    LC_CTYPE=C tr -dc 'A-Za-z0-9#$!@:/%' < /dev/urandom 2> /dev/null | head -c ${length} | xargs
   else
     return 1
   fi
