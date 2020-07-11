@@ -211,6 +211,10 @@ To test passphrase just run decrypt command, if everything is OK client configur
 ./wgcg.sh -d foo
 ```
 
+<div align="center">
+<img src="https://user-images.githubusercontent.com/1824874/87230971-8a97fc00-c3b3-11ea-98eb-309591c0b616.gif" />
+</div>
+
 ### Docker
 
 It is also possible to run the script inside of Docker container with already preinstalled dependecies.
