@@ -9,7 +9,8 @@ echo "Installing Wireguard and required dependencies on the server, please wait.
 echo
 
 # Installing wireguard kernel module and required dependencies
-add-apt-repository ppa:wireguard/wireguard
+# DEPRECATION NOTICE: WireGuard packages have now moved into official Ubuntu repository (Ubuntu 20.04, 19.10, 18.04, and 16.04)
+#add-apt-repository ppa:wireguard/wireguard
 apt-get update && apt-get install -y linux-headers-$(uname -r) wireguard
 mkdir -p /etc/wireguard
 

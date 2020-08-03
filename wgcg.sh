@@ -79,7 +79,7 @@ help() {
   echo -e "  ${GREEN}-d${NONE}|${GREEN}--decrypt-config${NONE} client_name                           Decrypt configuration file and print it out on STDOUT"
   echo -e "  ${GREEN}-r${NONE}|${GREEN}--rm-client-config${NONE} client_name                         Remove client configuration"
   echo -e "  ${GREEN}-q${NONE}|${GREEN}--gen-qr-code${NONE} client_name                              Generate QR code from client configuration file"
-  echo -e "  ${GREEN}-l${NONE}|${GREEN}--list-used-ips${NONE}                                        List all client's IPs that are currently in use"
+  echo -e "  ${GREEN}-l${NONE}|${GREEN}--list-used-ips${NONE}                                        List all clients IPs that are currently in use"
   echo -e "  ${GREEN}-S${NONE}|${GREEN}--sync${NONE}                                                 Synchronize server configuration (will establish SSH connection with server)"
   echo -e "  ${GREEN}-h${NONE}|${GREEN}--help${NONE}                                                 Show this help"
   echo

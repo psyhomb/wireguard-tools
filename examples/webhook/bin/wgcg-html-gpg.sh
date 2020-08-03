@@ -83,7 +83,7 @@ echo '<html>
       <th><pre><code><p># Create encrypted configuration file<br>cat > /tmp/'"${SERVER_NAME}"'.conf.asc <<"EOF"<br>'$(sed "s/$/<br>/" ${CONFIG_GPG_FILE} | tr -d "\n")'EOF</p></pre></code></th>
     </tr>
     <tr>
-      <th><pre><code><p># Decrypt configuration file and set permissions<br>gpg -o /usr/local/etc/wireguard/'"${SERVER_NAME}"'.conf -d /tmp/'"${SERVER_NAME}"'.conf.asc && \<br>chmod 600 /usr/local/etc/wireguard/'"${SERVER_NAME}"'.conf && \<br>rm -f /tmp/'"${SERVER_NAME}"'.conf.asc</p></pre></code></th>
+      <th><pre><code><p># Decrypt configuration file and set permissions<br>mkdir -p /usr/local/etc/wireguard && \<br>gpg -o /usr/local/etc/wireguard/'"${SERVER_NAME}"'.conf -d /tmp/'"${SERVER_NAME}"'.conf.asc && \<br>chmod 600 /usr/local/etc/wireguard/'"${SERVER_NAME}"'.conf && \<br>rm -f /tmp/'"${SERVER_NAME}"'.conf.asc</p></pre></code></th>
     </tr>
     <tr>
       <th><pre><code><p># Bring up the VPN tunnel<br>wg-quick up '"${SERVER_NAME}"'</p></pre></code></th>
