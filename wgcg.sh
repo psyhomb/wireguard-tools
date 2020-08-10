@@ -583,7 +583,7 @@ wg_list_used_ips() {
     ip_client_list="${GREEN}$(awk -F'[ /]' '/^Address =/ {print $(NF-1)}' ${client_config})${NONE} => ${BLUE}${client_config}${NONE}\n${ip_client_list}"
   done
 
-  echo -ne ${ip_client_list} | sort -k1n
+  echo -ne ${ip_client_list} | sort -t . -k1,1n -k2,2n -k3,3n -k4,4n
 }
 
 
