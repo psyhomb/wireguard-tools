@@ -513,7 +513,6 @@ EOF
 PublicKey = $(head -1 ${client_public_key})
 PresharedKey = $(head -1 ${preshared_key})
 AllowedIPs = ${client_wg_ip}/32
-PersistentKeepalive = 25
 ### ${client_name} - END
 EOF
 
