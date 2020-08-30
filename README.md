@@ -109,7 +109,7 @@ Options:
   -e|--encrypt-config client_name [passphrase]              Encrypt configuration file by using symmetric encryption (if passphrase not specified it will be generated - RECOMMENDED)
   -d|--decrypt-config client_name                           Decrypt configuration file and print it out on STDOUT
   -r|--rm-client-config client_name                         Remove client configuration
-  -q|--gen-qr-code client_name                              Generate QR code from client configuration file
+  -q|--gen-qr-code client_name [-]                          Generate QR code (PNG format) from client configuration file, if - is used, QR code will be printed out on stdout instead
   -l|--list-used-ips                                        List all clients IPs that are currently in use
   -S|--sync                                                 Synchronize server configuration (will establish SSH connection with server)
   -h|--help                                                 Show this help
