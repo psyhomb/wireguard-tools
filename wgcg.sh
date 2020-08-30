@@ -78,7 +78,7 @@ help() {
   echo -e "  ${GREEN}-e${NONE}|${GREEN}--encrypt-config${NONE} client_name [passphrase]              Encrypt configuration file by using symmetric encryption (if passphrase not specified it will be generated - RECOMMENDED)"
   echo -e "  ${GREEN}-d${NONE}|${GREEN}--decrypt-config${NONE} client_name                           Decrypt configuration file and print it out on STDOUT"
   echo -e "  ${GREEN}-r${NONE}|${GREEN}--rm-client-config${NONE} client_name                         Remove client configuration"
-  echo -e "  ${GREEN}-q${NONE}|${GREEN}--gen-qr-code${NONE} client_name                              Generate QR code from client configuration file"
+  echo -e "  ${GREEN}-q${NONE}|${GREEN}--gen-qr-code${NONE} client_name [-]                          Generate QR code (PNG format) from client configuration file, if - is used, QR code will be printed out on stdout instead"
   echo -e "  ${GREEN}-l${NONE}|${GREEN}--list-used-ips${NONE}                                        List all clients IPs that are currently in use"
   echo -e "  ${GREEN}-S${NONE}|${GREEN}--sync${NONE}                                                 Synchronize server configuration (will establish SSH connection with server)"
   echo -e "  ${GREEN}-h${NONE}|${GREEN}--help${NONE}                                                 Show this help"
@@ -523,6 +523,7 @@ EOF
 # Generate QR code
 gen_qr() {
   local config_name="${1}"
+  local output="${2}"
   local config_path="${WORKING_DIR}/client-${config_name}.conf"
 
   if [[ ! -f ${config_path} ]]; then
@@ -530,8 +531,17 @@ gen_qr() {
     exit 1
   fi
 
-  cat ${config_path} | qrencode -o ${config_path}.png && chmod 600 ${config_path}.png
-  echo -e "${GREEN}INFO${NONE}: QR file ${BLUE}${config_path}.png${NONE} has been generated successfully!"
+  local options="-o ${config_path}.png"
+  if [[ ${output} == "-" ]]; then
+    local options="-t ANSIUTF8 -o -"
+  fi
+
+  cat ${config_path} | qrencode ${options}
+
+  if [[ ${output} != "-" ]]; then
+    chmod 600 ${config_path}.png
+    echo -e "${GREEN}INFO${NONE}: QR file ${BLUE}${config_path}.png${NONE} has been generated successfully!"
+  fi
 }
 
 
@@ -669,8 +679,8 @@ case ${1} in
   ;;
   '-q'|'--gen-qr-code')
     shift
-    # client_name
-    gen_qr ${1}
+    # client_name, output
+    gen_qr ${1} ${2}
   ;;
   '-l'|'--list-used-ips')
     wg_list_used_ips
