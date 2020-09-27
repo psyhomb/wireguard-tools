@@ -37,10 +37,10 @@ Specify command line options that will be used by `webhook` service.
 ```bash
 cat > /etc/default/webhook <<'EOF'
 ### SSL termination on Webhook layer
-#OPTIONS="-hooks=/etc/webhook/hooks.json -hotreload -ip 127.0.0.1 -port 9000 -secure -cert /etc/webhook/ssl/wgcg.yourdomain.com.crt -key /etc/webhook/ssl/wgcg.yourdomain.com.key"
+#OPTIONS="-hooks=/etc/webhook/hooks.json -hotreload -ip 127.0.0.1 -port 9000 -secure -cert /etc/letsencrypt/live/wgcg.yourdomain.com/fullchain.pem -key /etc/letsencrypt/live/wgcg.yourdomain.com/privkey.pem -verbose"
 
 ### SSL termination on Nginx layer
-OPTIONS="-hooks=/etc/webhook/hooks.json -hotreload -ip 127.0.0.1 -port 9000"
+OPTIONS="-hooks=/etc/webhook/hooks.json -hotreload -ip 127.0.0.1 -port 9000 -verbose"
 EOF
 ```
 
@@ -140,7 +140,7 @@ server {
     ssl_session_timeout 10m;
 
     ssl_prefer_server_ciphers       on;
-    ssl_protocols                   TLSv1 TLSv1.1 TLSv1.2;
+    ssl_protocols                   TLSv1.2 TLSv1.3;
     ssl_ciphers                     ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS;
 
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";

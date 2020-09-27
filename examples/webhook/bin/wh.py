@@ -49,7 +49,9 @@ def main():
 
     l.append(readfile(auth_file))
 
-  mf[0]['trigger-rule']['or'] = l
+  for i in range(0, len(mf)):
+    mf[i]['trigger-rule']['or'] = l
+
   writefile(WH_CONFIG, mf)
 
 
