@@ -125,7 +125,7 @@ Current default options:
   WGCG_WORKING_DIR="/home/username/wireguard/wg0"
 ```
 
-[wgcg-install-wireguard.sh](./modules/wgcg-install-wireguard.sh) module will do all required system preparations on the Wiregurad server (running the module is idempotent operation):
+[wgcg-install-wireguard.sh](./modules/wgcg-install-wireguard.sh) module will do all required system preparations on the WireGuard server (running the module is idempotent operation):
 
 - Install `wireguard` kernel module and tools
 - Load the module
