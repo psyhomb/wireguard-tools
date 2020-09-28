@@ -100,7 +100,7 @@ Usage:
   wgcg.sh options
 
 Options:
-  -P|--sysprep filename.sh                                  Install Wiregurad kernel module, required tools and scripts (will establish SSH connection with server)
+  -P|--sysprep filename.sh                                  Install WireGuard kernel module, required tools and scripts (will establish SSH connection with server)
   -s|--add-server-config                                    Generate server configuration
   -c|--add-client-config client_name client_wg_ip           Generate client configuration
   -B|--add-clients-batch filename.csv[:rewrite|:norewrite]  Generate configuration for multiple clients in batch mode
@@ -125,7 +125,7 @@ Current default options:
   WGCG_WORKING_DIR="/home/username/wireguard/wg0"
 ```
 
-[wgcg-install-wireguard.sh](./modules/wgcg-install-wireguard.sh) module will do all required system preparations on the Wiregurad server (running the module is idempotent operation):
+[wgcg-install-wireguard.sh](./modules/wgcg-install-wireguard.sh) module will do all required system preparations on the WireGuard server (running the module is idempotent operation):
 
 - Install `wireguard` kernel module and tools
 - Load the module

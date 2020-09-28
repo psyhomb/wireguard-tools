@@ -69,7 +69,7 @@ help() {
   echo -e "  ${GREEN}$(basename ${0})${NONE} options"
   echo
   echo -e "${BLUE}Options${NONE}:"
-  echo -e "  ${GREEN}-P${NONE}|${GREEN}--sysprep${NONE} filename.sh                                  Install Wiregurad kernel module, required tools and scripts (will establish SSH connection with server)"
+  echo -e "  ${GREEN}-P${NONE}|${GREEN}--sysprep${NONE} filename.sh                                  Install WireGuard kernel module, required tools and scripts (will establish SSH connection with server)"
   echo -e "  ${GREEN}-s${NONE}|${GREEN}--add-server-config${NONE}                                    Generate server configuration"
   echo -e "  ${GREEN}-c${NONE}|${GREEN}--add-client-config${NONE} client_name client_wg_ip           Generate client configuration"
   echo -e "  ${GREEN}-B${NONE}|${GREEN}--add-clients-batch${NONE} filename.csv[:rewrite|:norewrite]  Generate configuration for multiple clients in batch mode"
