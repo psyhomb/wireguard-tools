@@ -76,7 +76,7 @@ help() {
   echo -e "                                                            Supported action modes are 'rewrite' or 'norewrite' (default)"
   echo -e "                                                            'rewrite' action mean regenerate ALL, 'norewrite' mean generate only configs and keys for new clients"
   echo -e "  ${GREEN}-e${NONE}|${GREEN}--encrypt-config${NONE} client_name [passphrase]              Encrypt configuration file by using symmetric encryption (if passphrase not specified it will be generated - RECOMMENDED)"
-  echo -e "  ${GREEN}-d${NONE}|${GREEN}--decrypt-config${NONE} client_name                           Decrypt configuration file and print it out on STDOUT"
+  echo -e "  ${GREEN}-d${NONE}|${GREEN}--decrypt-config${NONE} client_name                           Decrypt configuration file and print it out on stdout"
   echo -e "  ${GREEN}-r${NONE}|${GREEN}--rm-client-config${NONE} client_name                         Remove client configuration"
   echo -e "  ${GREEN}-q${NONE}|${GREEN}--gen-qr-code${NONE} client_name [-]                          Generate QR code (PNG format) from client configuration file, if - is used, QR code will be printed out on stdout instead"
   echo -e "  ${GREEN}-l${NONE}|${GREEN}--list-used-ips${NONE}                                        List all clients IPs that are currently in use"
@@ -225,7 +225,7 @@ encrypt() {
 }
 
 
-# Decrypt configuration file and print it out on STDOUT
+# Decrypt configuration file and print it out on stdout
 decrypt() {
   local client_name="${1}"
 
