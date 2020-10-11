@@ -510,6 +510,7 @@ EOF
 
 ### ${client_name} - START
 [Peer]
+# friendly_name = ${client_name}
 PublicKey = $(head -1 ${client_public_key})
 PresharedKey = $(head -1 ${preshared_key})
 AllowedIPs = ${client_wg_ip}/32
