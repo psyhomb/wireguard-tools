@@ -238,3 +238,13 @@ or if you are not using default configuration filename (`wgcg.conf`).
 ```bash
 WGCG_CONFIG_FILE="${HOME}/wireguard/wgcg/wg0.conf" ./wgcg-docker.sh -h
 ```
+
+### Monitoring
+
+#### Prometheus
+
+- [prometheus_wireguard_exporter](https://github.com/MindFlavor/prometheus_wireguard_exporter)
+
+#### Grafana
+
+- [wireguard-dashboard.json](./monitoring/wireguard-dashboard.json)
