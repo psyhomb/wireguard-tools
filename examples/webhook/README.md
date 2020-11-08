@@ -120,6 +120,14 @@ server {
     listen 80 default_server;
     server_name wgcg.yourdomain.com;
 
+    #access_log /var/log/nginx/wgcg.yourdomain.com-acme_access.log;
+    #error_log  /var/log/nginx/wgcg.yourdomain.com-acme_error.log;
+
+    ## https://certbot.eff.org/docs/using.html#webroot
+    #location ^~ /.well-known/acme-challenge/ {
+    #    root /usr/share/nginx/wgcg.yourdomain.com;
+    #}
+
     location / {
         return 301 https://$server_name$request_uri;
     }
