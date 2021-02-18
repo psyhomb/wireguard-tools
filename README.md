@@ -79,23 +79,34 @@ WGCG_CLIENT_ALLOWED_IPS="0.0.0.0/0"
 WGCG_WORKING_DIR="${HOME}/wireguard/${WGCG_SERVER_NAME}"
 ```
 
-Copy [wgcg.conf](./wgcg.conf) configuration file to the `wgcg` directory.
+Copy [wgcg.conf](./wgcg.conf) configuration file to `wgcg` directory.
 
 ```bash
 mkdir -p ${HOME}/wireguard/wgcg
 cp wgcg.conf ${HOME}/wireguard/wgcg/
 ```
 
+Copy [wgcg.sh](./wgcg.sh) script to `/usr/local/bin` directory.
+
+```bash
+cp wgcg.sh /usr/local/bin/
+```
+
 It is also possible to specify custom configuration file by passing `${WGCG_CONFIG_FILE}` environment variable.
 
 ```bash
-WGCG_CONFIG_FILE=./wgcg.conf ./wgcg.sh
+WGCG_CONFIG_FILE="${HOME}/wireguard/wgcg/wgcg.conf" wgcg.sh
 ```
 
 Print help and current default options.
 
+```bash
+wgcg.sh -h
+```
+
+Output:
+
 ```plain
-# ./wgcg.sh -h
 Usage:
   wgcg.sh options
 
@@ -135,19 +146,19 @@ Current default options:
 **Note:** You have to run it only once!
 
 ```bash
-./wgcg.sh --sysprep modules/wgcg-install-wireguard.sh
+wgcg.sh --sysprep modules/wgcg-install-wireguard.sh
 ```
 
 Generate server keys and config.
 
 ```bash
-./wgcg.sh -s
+wgcg.sh -s
 ```
 
 Generate client config, PKI key pairs and update server config (add new Peer block)
 
 ```bash
-./wgcg.sh -c foo 10.0.0.2
+wgcg.sh -c foo 10.0.0.2
 ```
 
 or to generate multiple client configs at once, create `client-configs.csv` file
@@ -162,7 +173,7 @@ EOF
 and run.
 
 ```bash
-./wgcg.sh -B client-configs.csv
+wgcg.sh -B client-configs.csv
 ```
 
 By default `-B` will only generate client config and key files for newly added clients, if you plan to regenerate config and key files for ALL clients that are specified in the csv file,
@@ -171,7 +182,7 @@ you'll have to use `rewrite` action mode, globally or per client line, in case b
 Global `rewrite` action mode
 
 ```bash
-./wgcg.sh -B client-configs.csv:rewrite
+wgcg.sh -B client-configs.csv:rewrite
 ```
 
 or per client line.
@@ -188,13 +199,13 @@ EOF
 Remove client config, PKI key pairs and update server config (remove Peer block).
 
 ```bash
-./wgcg.sh -r foo
+wgcg.sh -r foo
 ```
 
 Synchronize local server configuration file with server (live update).
 
 ```bash
-./wgcg.sh --sync
+wgcg.sh --sync
 ```
 
 In order to send client configuration file safely to the client you can use GPG symmetric encryption to encrypt it before sending, then you can send configuration file to client via one channel and passphrase via different channel.
@@ -202,13 +213,35 @@ In order to send client configuration file safely to the client you can use GPG 
 Encrypt configuration file.
 
 ```bash
-./wgcg.sh -e foo
+wgcg.sh -e foo
 ```
 
 To test passphrase just run decrypt command, if everything is OK client configuration will be printed out on the standard output.
 
 ```bash
-./wgcg.sh -d foo
+wgcg.sh -d foo
+```
+
+### Multi-Configuration
+
+It is also possible to manage multiple clusters with single script.  
+Create configuration file and command alias for every cluster.
+
+**Note:** Append following lines to `~/.zshrc` or `~/.bashrc` file.
+
+```bash
+alias wgcg-office1.sh="WGCG_CONFIG_FILE=${HOME}/wireguard/wgcg/office1.conf wgcg.sh"
+alias wgcg-office2.sh="WGCG_CONFIG_FILE=${HOME}/wireguard/wgcg/office2.conf wgcg.sh"
+```
+
+```bash
+source ~/.zshrc
+# or
+source ~/.bashrc
+```
+
+```bash
+wgcg-office1.sh -h
 ```
 
 ### Demo
