@@ -35,6 +35,13 @@ apt-get install wireguard-tools gpg qrencode grepcidr
 brew install wireguard-tools gpg qrencode grepcidr
 ```
 
+Make sure to append following line to [wgcg.conf](./wgcg.conf) file only if using MacOS.  
+By doing this we will force script to use GNU instead of BSD command line utilities (e.g. `grep`) and prevent any possible incompatibility errors.
+
+```bash
+echo -e '\n# Make sure script is using GNU command line utilities on MacOS\nexport PATH="/usr/local/opt/grep/libexec/gnubin:${PATH}"' >> wgcg.conf
+```
+
 ### Usage
 
 Before running the script we'll have to update [wgcg.conf](./wgcg.conf) configuration file.  
@@ -92,7 +99,7 @@ Copy [wgcg.sh](./wgcg.sh) script to `/usr/local/bin` directory.
 cp wgcg.sh /usr/local/bin/
 ```
 
-It is also possible to specify custom configuration file by passing `${WGCG_CONFIG_FILE}` environment variable.
+It is also possible to specify custom configuration file by passing `WGCG_CONFIG_FILE` environment variable.
 
 ```bash
 WGCG_CONFIG_FILE="${HOME}/wireguard/wgcg/wgcg.conf" wgcg.sh
