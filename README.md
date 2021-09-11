@@ -215,7 +215,7 @@ Synchronize local server configuration file with server (live update).
 wgcg.sh --sync
 ```
 
-In order to send client configuration file safely to the client you can use GPG symmetric encryption to encrypt it before sending, then you can send configuration file to client via one channel and passphrase via different channel.
+In order to send client configuration file to a person safely, you can use GPG symmetric encryption to encrypt data before sending it, then you can send configuration file to a person via one channel ([webwormhole](https://webwormhole.io)) and passphrase via different channel ([ots](https://github.com/sniptt-official/ots)).
 
 Encrypt configuration file.
 
