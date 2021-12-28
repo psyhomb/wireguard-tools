@@ -151,7 +151,7 @@ server {
     ssl_protocols                   TLSv1.2 TLSv1.3;
     ssl_ciphers                     ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS;
 
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
     location /healthcheck {
         add_header Content-Type "text/plain";
