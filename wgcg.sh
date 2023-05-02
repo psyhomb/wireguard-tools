@@ -30,6 +30,8 @@ SERVER_PUBLIC_IP=${WGCG_SERVER_PUBLIC_IP}
 SERVER_SSH_IP=${WGCG_SERVER_SSH_IP}
 # SSH server port (default: 22)
 SERVER_SSH_PORT=${WGCG_SERVER_SSH_PORT}
+# File with custom firewall rules in iptables compatible format that will be applied in idempotent manner on the server side at server startup time or each time `wgcg.sh --sync` command is executed
+SERVER_FW_CUSTOM_RULES_FILE=${WGCG_SERVER_FW_CUSTOM_RULES_FILE:-"${HOME}/wireguard/wgcg/wgfw.rules"}
 # Space separated list of DNS IPs (default: 1.1.1.1 1.0.0.1)
 CLIENT_DNS_IPS=${WGCG_CLIENT_DNS_IPS}
 # Space separated list of subnets (with CIDR) required for split-tunneling (default: 0.0.0.0/0)
@@ -389,7 +391,7 @@ gen_server_config() {
 Address = ${server_wg_ip}/${cidr}
 ListenPort = ${server_port}
 PrivateKey = $(head -1 ${server_private_key})
-PostUp = /usr/local/bin/wgfw.sh add
+PreUp = /usr/local/bin/wgfw.sh add
 PostDown = /usr/local/bin/wgfw.sh del
 EOF
 
@@ -481,7 +483,7 @@ gen_client_config() {
       fi
     fi
   else
-    if find ${WORKING_DIR} -maxdepth 1 | egrep -q "client-.*\.conf$"; then
+    if find ${WORKING_DIR} -maxdepth 1 | grep -Eq "client-.*\.conf$"; then
       client_config_match=$(grep -l "^Address = ${client_wg_ip}" ${WORKING_DIR}/client-*.conf)
       if [[ -n ${client_config_match} ]]; then
         echo -e "${RED}ERROR${NONE}: WG private IP address ${RED}${client_wg_ip}${NONE} already in use => ${BLUE}${client_config_match}${NONE}"
@@ -579,7 +581,7 @@ gen_client_config_batch() {
     gen_client_config ${client_name} ${client_wg_ip} ${SERVER_NAME} ${SERVER_PORT} ${SERVER_PUBLIC_IP} "${CLIENT_DNS_IPS}" "${CLIENT_ALLOWED_IPS}"
     [[ ${?} -ne 0 ]] && continue
     gen_qr ${client_name}
-  done < <(egrep -v '^(#|$)' ${client_batch_csv_file})
+  done < <(grep -Ev '^( *#|$)' ${client_batch_csv_file})
 }
 
 
@@ -619,6 +621,20 @@ wg_sync() {
   if [[ ${?} -ne 0 ]]; then
     echo -e "${YELLOW}WARNING${NONE}: It looks like ${GREEN}wireguard-tools${NONE} package isn't installed, please run script with ${GREEN}--sysprep${NONE} option first"
     exit 1
+  fi
+
+  if [[ -f ${SERVER_FW_CUSTOM_RULES_FILE} ]]; then
+    cat ${SERVER_FW_CUSTOM_RULES_FILE} | ssh -p ${server_ssh_port} root@${server_ssh_ip} "cat > /etc/wireguard/${SERVER_FW_CUSTOM_RULES_FILE##*/} && chmod 600 /etc/wireguard/${SERVER_FW_CUSTOM_RULES_FILE##*/}"
+    if [[ ${?} -eq 0 ]]; then
+      ssh -p ${server_ssh_port} root@${server_ssh_ip} "
+        if [[ -x "/usr/local/bin/wgfw.sh" ]]; then
+          /usr/local/bin/wgfw.sh set
+        fi
+      " || return ${?}
+    else
+      echo -e "${RED}ERROR${NONE}: Syncing firewall custom rules ${BLUE}${SERVER_FW_CUSTOM_RULES_FILE}${NONE} with server ${BLUE}${server_ssh_ip}${NONE} failed!"
+      exit 1
+    fi
   fi
 
   cat ${server_config} | ssh -p ${server_ssh_port} root@${server_ssh_ip} "cat > /etc/wireguard/${server_name}.conf && chmod 600 /etc/wireguard/${server_name}.conf"

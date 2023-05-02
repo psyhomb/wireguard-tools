@@ -15,9 +15,10 @@ help() {
   echo "  $(basename ${0}) options"
   echo
   echo "Options:"
-  echo "  add client_name private_ip      Add new client"
-  echo "  remove client_name              Remove client"
   echo "  list                            List existing clients"
+  echo "  add client_name private_ip      Add a new client"
+  echo "  remove client_name              Remove client"
+  echo "  sync                            Synchronize server configuration"
   echo "  help                            Show this help"
 }
 
@@ -70,17 +71,25 @@ EOF
 }
 
 
+wgcg_sync() {
+  wgcg.sh --sync
+  if [[ -f "/root/wireguard/wgcg/wg-2.conf" ]]; then
+    WGCG_CONFIG_FILE=/root/wireguard/wgcg/wg-2.conf wgcg.sh --sync
+  fi
+}
+
+
 case ${1} in
+  'list')
+    wgcg.sh --list-used-ips
+  ;;
   'add')
     shift
     wgcg.sh --add-client-config ${1} ${2} || exit 1
     wgcg.sh --encrypt-config ${1}
 
     echo "Syncing configuration with server..."
-    wgcg.sh --sync
-    if [[ -f "/root/wireguard/wgcg/wg-2.conf" ]]; then
-      WGCG_CONFIG_FILE=/root/wireguard/wgcg/wg-2.conf wgcg.sh --sync
-    fi
+    wgcg_sync
 
     gen_webhook_config ${1} "${WEBHOOK_CONFIG_PATH}/auth-${1}.json"
     wh.py
@@ -91,17 +100,14 @@ case ${1} in
     wgcg.sh --rm-client-config ${1} || exit 1
 
     echo "Syncing configuration with server..."
-    wgcg.sh --sync
-    if [[ -f "/root/wireguard/wgcg/wg-2.conf" ]]; then
-      WGCG_CONFIG_FILE=/root/wireguard/wgcg/wg-2.conf wgcg.sh --sync
-    fi
+    wgcg_sync
 
     rm -f "${WEBHOOK_CONFIG_PATH}/auth-${1}.json"
     wh.py
     chmod 600 "${WEBHOOK_CONFIG_PATH}/hooks.json"
   ;;
-  'list')
-    wgcg.sh --list-used-ips
+  'sync')
+    wgcg_sync
   ;;
   *)
     help

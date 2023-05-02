@@ -86,11 +86,12 @@ WGCG_CLIENT_ALLOWED_IPS="0.0.0.0/0"
 WGCG_WORKING_DIR="${HOME}/wireguard/${WGCG_SERVER_NAME}"
 ```
 
-Copy [wgcg.conf](./wgcg.conf) configuration file to `wgcg` directory.
+Copy [wgcg.conf](./wgcg.conf) and [wgfw.rules](./wgfw.rules) files to `wgcg` directory.
 
 ```bash
 mkdir -p ${HOME}/wireguard/wgcg
 cp wgcg.conf ${HOME}/wireguard/wgcg/
+cp wgfw.rules ${HOME}/wireguard/wgcg/
 ```
 
 Copy [wgcg.sh](./wgcg.sh) script to `/usr/local/bin` directory.
@@ -250,6 +251,10 @@ source ~/.bashrc
 ```bash
 wgcg-office1.sh -h
 ```
+
+### Firewall rules
+
+Custom firewall rules, in iptables compatible format, can be added using [wgfw.rules](./wgfw.rules) file. All rules from this file are going to be applied in idempotent manner on the server side at server startup time or each time `wgcg.sh --sync` command is executed.
 
 ### Demo
 
