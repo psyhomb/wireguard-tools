@@ -322,23 +322,21 @@ remove_client_config() {
   mv ${server_config}.backup ${server_config}
 
   # Delete config and key files
-  rm -f ${WORKING_DIR}/client-${client_name}{.conf,.conf.png,.conf.asc,-private.key,-public.key}
+  rm -f ${WORKING_DIR}/client-${client_name}{.conf,.conf.png,.conf.asc,-private.key,-public.key,-preshared.key}
 
   echo -e "${GREEN}INFO${NONE}: Client config ${RED}${client_config}${NONE} has been successfully removed!"
 }
 
 
-# Generate preshared, server and client keys
+# Generate server and client key pairs
 gen_keys() {
   local name_prefix="${1}"
 
   local private_key="${WORKING_DIR}/${name_prefix}-private.key"
   local public_key="${WORKING_DIR}/${name_prefix}-public.key"
-  local preshared_key="${WORKING_DIR}/preshared.key"
 
   wg genkey | tee ${private_key} | wg pubkey > ${public_key}
-  [[ ! -f ${preshared_key} ]] && wg genpsk > ${preshared_key} 2> /dev/null
-  chmod 600 ${private_key} ${preshared_key}
+  chmod 600 ${private_key}
 }
 
 
@@ -413,7 +411,7 @@ gen_client_config() {
   local client_dns_ips="${6:-1.1.1.1 1.0.0.1}"
   local client_allowed_ips="${7:-0.0.0.0/0}"
 
-  local preshared_key="${WORKING_DIR}/preshared.key"
+  local preshared_key="${WORKING_DIR}/client-${client_name}-preshared.key"
   local client_private_key="${WORKING_DIR}/client-${client_name}-private.key"
   local client_public_key="${WORKING_DIR}/client-${client_name}-public.key"
   local client_config="${WORKING_DIR}/client-${client_name}.conf"
@@ -493,6 +491,8 @@ gen_client_config() {
   fi
 
   gen_keys client-${client_name}
+  wg genpsk > ${preshared_key} 2> /dev/null
+  chmod 600 ${preshared_key}
 
   cat > ${client_config} <<EOF && chmod 600 ${client_config}
 [Interface]
